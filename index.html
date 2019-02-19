@@ -1,0 +1,31 @@
+<script type="module">
+import { html, render } from 'https://unpkg.com/lit-html/lit-html.js';
+import { Pivot, PivotTree } from './pivot.js';
+
+
+var table = {
+
+    Name:"test",
+
+    Rows: [
+    ["Seth", 1, 1],
+    ["Seth", 2, 1],
+    ["Seth", 3, 2],
+    ["Seth", 4, 2],
+    ["Adam", 1, 2],
+    ["Adam", 2, 2],
+    ["Adam", 3, 2],
+    ["Adam", 4, 2],
+    ["Adam", 5, 1],
+    ["Adam", 6, 1],
+    ["Adam", 7, 1],
+    ],
+
+    Header:[],
+
+};
+
+PivotTree(table, [0, 2], 0);
+console.log(table);
+
+</script>
