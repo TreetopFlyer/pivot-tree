@@ -19,9 +19,8 @@ export const Pivot = (inTable, inColumn) =>
         }
         output.push({
             Name:cell,
-            Header:inTable.Header,
             Rows:[row],
-            Parent:inTable
+            Parent:inTable,
         });
     }
     return output;
@@ -29,29 +28,55 @@ export const Pivot = (inTable, inColumn) =>
 
 export const PivotTree = (inTable, inColumns, inDepth, inSums) =>
 {
-    var i, j;
+    var i;
     inTable.Children = Pivot(inTable, inColumns[inDepth]);
     inDepth++;
     if(inDepth == inColumns.length)
     {
-        console.log("at max depth");
-        inTable.Sums = [];
-        for(i in inSums)
+        for(i in inTable.Children)
         {
-            inTable.Sums[i] = 0;
-            
+            Sum(inTable.Children[i], inSums);
         }
-        for(i in inTable.Rows)
-        {
-            for(j in inSums)
-            {
-                inTable.Sums[j] += inTable.Rows[i][inSums];
-            }
-        }
-        return;
+        SumTree(inTable, inSums);
     }
-    for(i in inTable.Children)
+    else
     {
-        PivotTree(inTable.Children[i], inColumns, inDepth);
+        for(i in inTable.Children)
+        {
+            PivotTree(inTable.Children[i], inColumns, inDepth, inSums);
+        }
+    }
+
+};
+
+export const Sum = (inTable, inSums) =>
+{
+    var j, k;
+    inTable.Sums = [];
+    for(j in inSums)
+    {
+        inTable.Sums[j] = 0;
+        for(k in inTable.Rows)
+        {
+            inTable.Sums[j] += inTable.Rows[k][inSums[j]];
+        }
+    }
+};
+
+export const SumTree = (inParent, inSums) =>
+{
+    var j, k;
+    inParent.Sums = [];
+    for(j in inSums)
+    {
+        inParent.Sums[j] = 0;
+        for(k in inParent.Children)
+        {
+            inParent.Sums[j] += inParent.Children[k].Sums[j];
+        }
+    }
+    if(inParent.Parent)
+    {
+        SumTree(inParent.Parent, inSums);
     }
 };

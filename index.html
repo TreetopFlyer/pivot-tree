@@ -8,24 +8,24 @@ var table = {
     Name:"test",
 
     Rows: [
-    ["Seth", 1, 1],
-    ["Seth", 2, 1],
-    ["Seth", 3, 2],
-    ["Seth", 4, 2],
-    ["Adam", 1, 2],
-    ["Adam", 2, 2],
-    ["Adam", 3, 2],
-    ["Adam", 4, 2],
-    ["Adam", 5, 1],
-    ["Adam", 6, 1],
-    ["Adam", 7, 1],
+    ["thing1", "a", 1, 1],
+    ["thing1", "b", 2, 1],
+    ["thing1", "a", 3, 2],
+    ["thing1", "b", 4, 2],
+    ["thing2", "a", 1, 2],
+    ["thing2", "b", 2, 2],
+    ["thing2", "a", 3, 2],
+    ["thing2", "b", 4, 2],
+    ["thing2", "a", 5, 1],
+    ["thing2", "b", 6, 1],
+    ["thing2", "a", 7, 1],
     ],
 
     Header:[],
 
 };
 
-PivotTree(table, [0, 2], 0);
+PivotTree(table, [0, 1], 0, [2, 3]);
 console.log(table);
 
 </script>
