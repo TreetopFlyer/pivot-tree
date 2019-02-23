@@ -1,12 +1,39 @@
+<style>
+.Row
+{
+    padding-left:20px;
+    overflow:hidden;
+    clear:both;
+}
+.Row > .Name
+{
+    float:left;
+}
+.Row > .Columns
+{
+    float:right;
+    overflow:hidden;
+}
+.Columns > .Cell
+{
+    width:120px;
+    float:left;
+    border:1px solid #333;
+    padding:5px;
+
+    text-align:right;
+}
+</style>
+<div id="App"></div>
 <script type="module">
 import { html, render } from 'https://unpkg.com/lit-html/lit-html.js';
-import { Pivot, PivotTree } from './pivot.js';
-
+import { Pivot, PivotTree, SumRows } from './pivot.js';
 
 var table = {
-
     Name:"test",
-
+    Header:["Thing", "Type", "Cost", "Count"],
+    Sums:[],
+    Children:[],
     Rows: [
     ["thing1", "a", 1, 1],
     ["thing1", "b", 2, 1],
@@ -19,13 +46,35 @@ var table = {
     ["thing2", "a", 5, 1],
     ["thing2", "b", 6, 1],
     ["thing2", "a", 7, 1],
-    ],
+    ]
+};
+SumRows(table, [2, 3]);
+PivotTree(table, [0, 1], [2, 3]);
 
-    Header:[],
 
+const Tier = (inTable) =>
+{
+    return html`
+    <div class="Row">
+        <div class="Name">
+            ${inTable.Name}
+        </div>
+        <div class="Columns">
+        ${inTable.Sums.map( (inItem)=>{
+            return html`
+            <div class="Cell">
+                ${inItem}
+            </div>
+            `;
+        } )}
+        </div>
+        ${inTable.Children.map( (inItem)=>{
+            return Tier(inItem);
+        } )}
+    </div>
+    `;
 };
 
-PivotTree(table, [0, 1], 0, [2, 3]);
-console.log(table);
+render(Tier(table), document.querySelector("#App"));
 
 </script>

@@ -1,4 +1,4 @@
-export const Pivot = (inTable, inColumn, inSums) =>
+export const Pivot = (inTable, inColumn) =>
 {
     var i, j;
     var output;
@@ -18,80 +18,54 @@ export const Pivot = (inTable, inColumn, inSums) =>
                 continue rows;
             }
         }
-        sums = [];
-        for(j in inSums)
-        {
-            sums[j] = 0;
-        }
         output.push({
             Name:cell,
+            Header:inTable.Header,
             Rows:[row],
             Parent:inTable,
-            Sums:sums
+            Children:[],
+            Sums:[]
         });
     }
     return output;
 };
 
-export const PivotTree = (inTable, inColumns, inDepth, inSums) =>
+export const PivotTree = (inTable, inColumns, inSums, inDepth) =>
 {
     var i;
-    SumReset(inTable, inSums);
-    inTable.Children = Pivot(inTable, inColumns[inDepth]);
-    inDepth++;
-    if(inDepth == inColumns.length)
+    var depth = inDepth||0;
+    inTable.Children = Pivot(inTable, inColumns[depth]);
+    depth++;
+    if(depth == inColumns.length)
     {
         for(i in inTable.Children)
         {
-            SumReset(inTable.Children[i], inSums);
-            Sum(inTable.Children[i], inSums);
-            SumTree(inTable.Children[i], inSums);
+            SumRows(inTable.Children[i], inSums);
         }
     }
     else
     {
         for(i in inTable.Children)
         {
-            PivotTree(inTable.Children[i], inColumns, inDepth, inSums);
-        }
-    }
-
-};
-
-export const Sum = (inTable, inSums) =>
-{
-    var j, k;
-    var add;
-    for(j in inSums)
-    {
-        for(k in inTable.Rows)
-        {
-            add = inTable.Rows[k][inSums[j]];
-            inTable.Sums[j] += add;
+            SumRows(inTable.Children[i], inSums);
+            PivotTree(inTable.Children[i], inColumns, inSums, depth);
         }
     }
 };
 
-export const SumReset = (inTable, inSums) =>
+export const SumRows = (inTable, inSums) =>
 {
-    var i;
+    var i, j;
+    var column, row;
     inTable.Sums = [];
     for(i in inSums)
     {
         inTable.Sums[i] = 0;
-    }
-};
-
-// push sums from inTable to inTable.Parent
-export const SumTree = (inTable) =>
-{
-    var i;
-    if(inTable.Parent)
-    {
-        for(i in inTable.Sums)
+        column = inSums[i];
+        for(j in inTable.Rows)
         {
-            inTable.Parent.Sums[i] += inTable.Sums[i];
+            row = inTable.Rows[j];
+            inTable.Sums[i] += row[column];
         }
-        SumTree(inTable.Parent);
     }
 };
