@@ -32,11 +32,81 @@ import { Pivot, PivotTree, SumRows, TweakUp, TweakDown } from './pivot.js';
 var App = {
     Pivot: ["Thing", "Type"],
     Sum: ["Cost", "Count"],
-    Edits:[],
+    Edits:[
+        {
+            Pivot:"",
+            Nodes:[
+                {
+                    Path:"",
+                    Columns:[
+                        {
+                            Column:"",
+                            Amount:0
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
     Model:table
 };
-App.Create = (inTable, inColumn, inAmount) =>
+App.Archive = {};
+App.Archive.Commit = (inPivot, inPath, inColumn, inAmount) => 
 {
+    var edits, pivot, path, columns;
+    edits = App.Edits;
+    pivot = App.Archive.MatchPivot(edits, inPivot.join(" |>- "));
+    path = App.Archive.MatchPath(pivot, inPath.join(" |>- "));
+    columns = App.Archive.MatchColumn(path, inColumn, inAmount);
+};
+App.Archive.MatchPivot = (inEdits, inPivot) =>
+{
+    var i;
+    var newNode;
+    for(i in inEdits)
+    {
+        if(inEdits[i].Pivot == inPivot)
+        {
+            return inEdits[i];
+        }
+    }
+    newNode = {Pivot:inPivot, Nodes:[]};
+    inEdits.push(newNode);
+    return newNode;
+};
+App.Archive.MatchPath = (inPivot, inPath) =>
+{
+    var i;
+    var newNode;
+    for(i in inPivot.Nodes)
+    {
+        if(inPivot.Nodes[i].Path == inPath)
+        {
+            return inPivot.Nodes[i];
+        }
+    }
+    newNode = {Path:inPath, Columns:[]};
+    inPivot.Nodes.push(newNode);
+    return newNode;
+};
+App.Archive.MatchColumn = (inPath, inColumn, inAmount) =>
+{
+    var i;
+    var newNode;
+    for(i in inPath.Columns)
+    {
+        if(inPath.Columns[i].Column == inColumn)
+        {
+            return inPath.Columns[i];
+        }
+    }
+    newNode = {Column:inColumn, Amount:inAmount};
+    inPath.Columns.push(newNode);
+    return newNode;
+};
+App.CreateEdit = (inTable, inColumn, inAmount) =>
+{
+    var i, j, k;
     var oldSum, newSum;
     var path;
     
@@ -48,7 +118,8 @@ App.Create = (inTable, inColumn, inAmount) =>
     TweakUp(inTable, inColumn, newSum - oldSum, path);
     TweakDown(inTable, inColumn, inAmount);
 
-    App.Edits.push({Pivot:App.Pivot.join("|>"), Path:path.join("|>"), Column:inColumn, Amount:inAmount});    
+    App.Archive.Commit(App.Pivot, path, inColumn, inAmount);    
+    console.log(App.Edits);
     Render.Update();  
 };
 App.Remove = (inIndex) =>
@@ -84,7 +155,7 @@ Render.Tier = (inTable, inPath, inApp) =>
         <div class="Columns">
         ${inTable.Sums.map( (inItem, inIndex)=>{
             return html`
-            <div class="Cell" @click=${ ()=>{inApp.Create(inTable, inIndex, 1.33);} }>
+            <div class="Cell" @click=${ ()=>{inApp.CreateEdit(inTable, inIndex, 1.33);} }>
                 ${inItem.toFixed(2)}
             </div>
             `;
