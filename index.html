@@ -27,9 +27,53 @@
 <div id="App"></div>
 <script type="module">
 import { html, render } from 'https://unpkg.com/lit-html/lit-html.js';
-import { Pivot, PivotTree, SumRows } from './pivot.js';
+import { Pivot, PivotTree, SumRows, TweakUp, TweakDown } from './pivot.js';
 
-const Tier = (inTable, inPath, inApp) =>
+var App = {
+    Pivot: ["Thing", "Type"],
+    Sum: ["Cost", "Count"],
+    Edits:[],
+    Model:table
+};
+App.Create = (inTable, inColumn, inAmount) =>
+{
+    var oldSum, newSum;
+    var path;
+    
+    oldSum = inTable.Sums[inColumn];
+    newSum = oldSum*inAmount;
+    inTable.Sums[inColumn] = newSum;
+    path = [];
+
+    TweakUp(inTable, inColumn, newSum - oldSum, path);
+    TweakDown(inTable, inColumn, inAmount);
+
+    App.Edits.push({Pivot:App.Pivot.join("|>"), Path:path.join("|>"), Column:inColumn, Amount:inAmount});    
+    Render.Update();  
+};
+App.Remove = (inIndex) =>
+{
+
+};
+App.Pivot = (inArray) =>
+{
+    App.Pivot = inArray;
+    PivotTree(App.Model, App.Pivot, App.Sum);
+    //todo: apply tweaks to leaves
+    Render.Update();
+};
+App.Setup = (inTable, inPivots, inSums) =>
+{
+    App.Model = inTable;
+    App.Pivot = inPivots;
+    App.Sum = inSums;
+    SumRows(App.Model, App.Sum);
+    PivotTree(App.Model, App.Pivot, App.Sum);
+    Render.Update();
+};
+
+var Render = {};
+Render.Tier = (inTable, inPath, inApp) =>
 {
     var path = inPath.concat([inTable.Name]);
     return html`
@@ -39,29 +83,30 @@ const Tier = (inTable, inPath, inApp) =>
         </div>
         <div class="Columns">
         ${inTable.Sums.map( (inItem, inIndex)=>{
-            var column = inTable.Header[inIndex];
             return html`
-            <div class="Cell" @click=${ ()=>{
-                inApp.Create(path.concat([column]), 1.33);
-                console.log(path.concat([column]));
-            } }>
-                ${inItem}
+            <div class="Cell" @click=${ ()=>{inApp.Create(inTable, inIndex, 1.33);} }>
+                ${inItem.toFixed(2)}
             </div>
             `;
         } )}
         </div>
         ${inTable.Children.map( (inItem)=>{
-            return Tier(inItem, path);
+            return Render.Tier(inItem, path, inApp);
         } )}
     </div>
     `;
 };
+Render.Update = () =>
+{
+    render( Render.Tier(App.Model, [], App), document.querySelector("#App"));
+};
 
-
+/*************************/
 var table = {
     Name:"test",
     Header:["Thing", "Type", "Cost", "Count"],
     Sums:[],
+    Parent:false,
     Children:[],
     Rows: [
     ["thing1", "a", 1, 1],
@@ -77,26 +122,6 @@ var table = {
     ["thing2", "a", 7, 1],
     ]
 };
-
-
-var App = {
-    Pivot: ["Thing", "Type"],
-    Sum: ["Cost", "Count"],
-    Edits:[]
-};
-App.Create = (inPath, inAmount)=>{
-    Adjust.Edits.push({Path:inPath, Amount:inAmount});      
-};
-App.Remove = (inIndex) =>
-{
-
-};
-
-
-SumRows(table, App.Sum);
-PivotTree(table, App.Pivot, App.Sum);
-console.log(table);
-render( Tier(table, []), document.querySelector("#App"));
-
+App.Setup(table, ["Thing", "Type"], ["Cost", "Count"]);
 
 </script>

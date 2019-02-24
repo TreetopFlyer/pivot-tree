@@ -55,18 +55,6 @@ export const PivotTree = (inTable, inColumns, inSums, inDepth) =>
     }
 };
 
-export const MapColumn = (inTable, inKey) =>
-{
-    var i;
-    for(i in inTable.Header)
-    {
-        if(inTable.Header[i] == inKey)
-        {
-            return i;
-        }
-    }
-};
-
 export const SumRows = (inTable, inSums) =>
 {
     var i, j;
@@ -83,3 +71,39 @@ export const SumRows = (inTable, inSums) =>
         }
     }
 };
+
+export const MapColumn = (inTable, inKey) =>
+{
+    var i;
+    for(i in inTable.Header)
+    {
+        if(inTable.Header[i] == inKey)
+        {
+            return i;
+        }
+    }
+};
+
+export const TweakUp = (inTable, inColumn, inDelta, inPath) =>
+{
+    if(inTable.Parent)
+    {
+        inTable.Parent.Sums[inColumn] += inDelta;
+        inPath.unshift(inTable.Name);
+        TweakUp(inTable.Parent, inColumn, inDelta, inPath);
+    }
+    else
+    {
+        return inPath;
+    }
+};
+export const TweakDown = (inTable, inColumn, inScalar) =>
+{
+    var i;
+    for(i in inTable.Children)
+    {
+        inTable.Children[i].Sums[inColumn] *= inScalar;
+        TweakDown(inTable.Children[i], inColumn, inScalar);
+    }
+};
+
