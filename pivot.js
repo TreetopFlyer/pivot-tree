@@ -4,12 +4,14 @@ export const Pivot = (inTable, inColumn) =>
     var output;
     var row;
     var cell;
-    var sums;
+    var column;
     output = [];
+
     rows: for(i in inTable.Rows)
     {
         row = inTable.Rows[i];
-        cell = row[inColumn].toString().toLowerCase();
+        column = MapColumn(inTable, inColumn);
+        cell = row[column].toString().toLowerCase();
         uniques: for(j in output)
         {
             if(cell == output[j].Name)
@@ -53,6 +55,18 @@ export const PivotTree = (inTable, inColumns, inSums, inDepth) =>
     }
 };
 
+export const MapColumn = (inTable, inKey) =>
+{
+    var i;
+    for(i in inTable.Header)
+    {
+        if(inTable.Header[i] == inKey)
+        {
+            return i;
+        }
+    }
+};
+
 export const SumRows = (inTable, inSums) =>
 {
     var i, j;
@@ -61,7 +75,7 @@ export const SumRows = (inTable, inSums) =>
     for(i in inSums)
     {
         inTable.Sums[i] = 0;
-        column = inSums[i];
+        column = MapColumn(inTable, inSums[i]);
         for(j in inTable.Rows)
         {
             row = inTable.Rows[j];

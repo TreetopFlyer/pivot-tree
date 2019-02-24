@@ -29,6 +29,35 @@
 import { html, render } from 'https://unpkg.com/lit-html/lit-html.js';
 import { Pivot, PivotTree, SumRows } from './pivot.js';
 
+const Tier = (inTable, inPath, inApp) =>
+{
+    var path = inPath.concat([inTable.Name]);
+    return html`
+    <div class="Row">
+        <div class="Name">
+            ${inTable.Name}
+        </div>
+        <div class="Columns">
+        ${inTable.Sums.map( (inItem, inIndex)=>{
+            var column = inTable.Header[inIndex];
+            return html`
+            <div class="Cell" @click=${ ()=>{
+                inApp.Create(path.concat([column]), 1.33);
+                console.log(path.concat([column]));
+            } }>
+                ${inItem}
+            </div>
+            `;
+        } )}
+        </div>
+        ${inTable.Children.map( (inItem)=>{
+            return Tier(inItem, path);
+        } )}
+    </div>
+    `;
+};
+
+
 var table = {
     Name:"test",
     Header:["Thing", "Type", "Cost", "Count"],
@@ -48,33 +77,26 @@ var table = {
     ["thing2", "a", 7, 1],
     ]
 };
-SumRows(table, [2, 3]);
-PivotTree(table, [0, 1], [2, 3]);
 
 
-const Tier = (inTable) =>
+var App = {
+    Pivot: ["Thing", "Type"],
+    Sum: ["Cost", "Count"],
+    Edits:[]
+};
+App.Create = (inPath, inAmount)=>{
+    Adjust.Edits.push({Path:inPath, Amount:inAmount});      
+};
+App.Remove = (inIndex) =>
 {
-    return html`
-    <div class="Row">
-        <div class="Name">
-            ${inTable.Name}
-        </div>
-        <div class="Columns">
-        ${inTable.Sums.map( (inItem)=>{
-            return html`
-            <div class="Cell">
-                ${inItem}
-            </div>
-            `;
-        } )}
-        </div>
-        ${inTable.Children.map( (inItem)=>{
-            return Tier(inItem);
-        } )}
-    </div>
-    `;
+
 };
 
-render(Tier(table), document.querySelector("#App"));
+
+SumRows(table, App.Sum);
+PivotTree(table, App.Pivot, App.Sum);
+console.log(table);
+render( Tier(table, []), document.querySelector("#App"));
+
 
 </script>
