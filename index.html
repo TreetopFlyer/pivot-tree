@@ -30,79 +30,25 @@ import { html, render } from 'https://unpkg.com/lit-html/lit-html.js';
 import { Pivot, PivotTree, SumRows, TweakUp, TweakDown } from './pivot.js';
 
 var App = {
-    Pivot: ["Thing", "Type"],
-    Sum: ["Cost", "Count"],
-    Edits:[
-        {
-            Pivot:"",
-            Nodes:[
-                {
-                    Path:"",
-                    Columns:[
-                        {
-                            Column:"",
-                            Amount:0
-                        }
-                    ]
-                }
-            ]
-        }
-    ],
-    Model:table
-};
-App.Archive = {};
-App.Archive.Commit = (inPivot, inPath, inColumn, inAmount) => 
-{
-    var edits, pivot, path, columns;
-    edits = App.Edits;
-    pivot = App.Archive.MatchPivot(edits, inPivot.join(" |>- "));
-    path = App.Archive.MatchPath(pivot, inPath.join(" |>- "));
-    columns = App.Archive.MatchColumn(path, inColumn, inAmount);
-};
-App.Archive.MatchPivot = (inEdits, inPivot) =>
-{
-    var i;
-    var newNode;
-    for(i in inEdits)
-    {
-        if(inEdits[i].Pivot == inPivot)
-        {
-            return inEdits[i];
-        }
+    Model:{
+        Header:["Thing", "Type", "Cost", "Count"],
+        Sums:  [                 "Cost", "Count"],
+        Rows:  [
+               ["thing1", "a",    1,      1     ],
+               ["thing1", "b",    2,      1     ],
+               ["thing1", "a",    3,      2     ],
+               ["thing1", "b",    4,      2     ],
+               ["thing2", "a",    1,      2     ],
+               ["thing2", "b",    2,      2     ],
+               ["thing2", "a",    3,      2     ],
+               ["thing2", "b",    4,      2     ],
+               ["thing2", "a",    5,      1     ],
+               ["thing2", "b",    6,      1     ],
+               ["thing2", "a",    7,      1     ]
+        ],
+        Trees:[],
+        Active:false 
     }
-    newNode = {Pivot:inPivot, Nodes:[]};
-    inEdits.push(newNode);
-    return newNode;
-};
-App.Archive.MatchPath = (inPivot, inPath) =>
-{
-    var i;
-    var newNode;
-    for(i in inPivot.Nodes)
-    {
-        if(inPivot.Nodes[i].Path == inPath)
-        {
-            return inPivot.Nodes[i];
-        }
-    }
-    newNode = {Path:inPath, Columns:[]};
-    inPivot.Nodes.push(newNode);
-    return newNode;
-};
-App.Archive.MatchColumn = (inPath, inColumn, inAmount) =>
-{
-    var i;
-    var newNode;
-    for(i in inPath.Columns)
-    {
-        if(inPath.Columns[i].Column == inColumn)
-        {
-            return inPath.Columns[i];
-        }
-    }
-    newNode = {Column:inColumn, Amount:inAmount};
-    inPath.Columns.push(newNode);
-    return newNode;
 };
 App.CreateEdit = (inTable, inColumn, inAmount) =>
 {
@@ -118,33 +64,57 @@ App.CreateEdit = (inTable, inColumn, inAmount) =>
     TweakUp(inTable, inColumn, newSum - oldSum, path);
     TweakDown(inTable, inColumn, inAmount);
 
-    App.Archive.Commit(App.Pivot, path, inColumn, inAmount);    
-    console.log(App.Edits);
-    Render.Update();  
+    Render.Update(App);  
 };
-App.Remove = (inIndex) =>
+App.RemoveEdit = (inIndex) =>
 {
 
 };
 App.Pivot = (inArray) =>
 {
-    App.Pivot = inArray;
-    PivotTree(App.Model, App.Pivot, App.Sum);
-    //todo: apply tweaks to leaves
-    Render.Update();
-};
-App.Setup = (inTable, inPivots, inSums) =>
-{
-    App.Model = inTable;
-    App.Pivot = inPivots;
-    App.Sum = inSums;
-    SumRows(App.Model, App.Sum);
-    PivotTree(App.Model, App.Pivot, App.Sum);
-    Render.Update();
+    var i;
+    var check, copy, root, tree;
+    check = inArray.join("|>-");
+    for(i in App.Model.Trees)
+    {
+        if(App.Model.Trees[i].Pivot.join("|>-") == check)
+        {
+            App.Model.Active = App.Model.Trees[i];
+            Render.Update();
+            return;
+        }
+    }
+
+    copy = check.split("|>-");
+    root = {
+        Name:"Root",
+        Header:App.Model.Header,
+        Rows:App.Model.Rows,
+        Parent:false,
+        Sums:[]
+    };
+    PivotTree(root, copy, App.Model.Sums);
+    tree = {
+        Pivot: copy,
+        Nodes: root.Children
+    };
+    App.Model.Trees.push(tree);
+    App.Model.Active = tree;
+    Render.Update(App);
 };
 
 var Render = {};
-Render.Tier = (inTable, inPath, inApp) =>
+Render.Update = (inApp) =>
+{
+    render( Render.Tree(inApp), document.querySelector("#App"));
+};
+Render.Tree = (inApp) =>
+{
+    return inApp.Model.Active.Nodes.map( (inBranch)=>{
+        return Render.Branch(inBranch, [], inApp)
+    });
+}
+Render.Branch = (inTable, inPath, inApp) =>
 {
     var path = inPath.concat([inTable.Name]);
     return html`
@@ -162,37 +132,14 @@ Render.Tier = (inTable, inPath, inApp) =>
         } )}
         </div>
         ${inTable.Children.map( (inItem)=>{
-            return Render.Tier(inItem, path, inApp);
+            return Render.Branch(inItem, path, inApp);
         } )}
     </div>
     `;
 };
-Render.Update = () =>
-{
-    render( Render.Tier(App.Model, [], App), document.querySelector("#App"));
-};
 
 /*************************/
-var table = {
-    Name:"test",
-    Header:["Thing", "Type", "Cost", "Count"],
-    Sums:[],
-    Parent:false,
-    Children:[],
-    Rows: [
-    ["thing1", "a", 1, 1],
-    ["thing1", "b", 2, 1],
-    ["thing1", "a", 3, 2],
-    ["thing1", "b", 4, 2],
-    ["thing2", "a", 1, 2],
-    ["thing2", "b", 2, 2],
-    ["thing2", "a", 3, 2],
-    ["thing2", "b", 4, 2],
-    ["thing2", "a", 5, 1],
-    ["thing2", "b", 6, 1],
-    ["thing2", "a", 7, 1],
-    ]
-};
-App.Setup(table, ["Thing", "Type"], ["Cost", "Count"]);
+App.Pivot(["Thing", "Type"]);
+App.Pivot(["Type", "Thing"]);
 
 </script>

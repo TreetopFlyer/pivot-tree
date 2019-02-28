@@ -25,8 +25,7 @@ export const Pivot = (inTable, inColumn) =>
             Header:inTable.Header,
             Rows:[row],
             Parent:inTable,
-            Children:[],
-            Sums:[]
+            Children:[]
         });
     }
     return output;
@@ -60,9 +59,11 @@ export const SumRows = (inTable, inSums) =>
     var i, j;
     var column, row;
     inTable.Sums = [];
+    inTable.Tweaks = [];
     for(i in inSums)
     {
         inTable.Sums[i] = 0;
+        inTable.Tweaks[i] = 0;
         column = MapColumn(inTable, inSums[i]);
         for(j in inTable.Rows)
         {
