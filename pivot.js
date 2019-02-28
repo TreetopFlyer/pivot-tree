@@ -59,16 +59,14 @@ export const SumRows = (inTable, inSums) =>
     var i, j;
     var column, row;
     inTable.Sums = [];
-    inTable.Tweaks = [];
     for(i in inSums)
     {
-        inTable.Sums[i] = 0;
-        inTable.Tweaks[i] = 0;
+        inTable.Sums[i] = {Value:0, Tweak:0};
         column = MapColumn(inTable, inSums[i]);
         for(j in inTable.Rows)
         {
             row = inTable.Rows[j];
-            inTable.Sums[i] += row[column];
+            inTable.Sums[i].Value += row[column];
         }
     }
 };
@@ -89,7 +87,7 @@ export const TweakUp = (inTable, inColumn, inDelta, inPath) =>
 {
     if(inTable.Parent)
     {
-        inTable.Parent.Sums[inColumn] += inDelta;
+        inTable.Parent.Sums[inColumn].Value += inDelta;
         inPath.unshift(inTable.Name);
         TweakUp(inTable.Parent, inColumn, inDelta, inPath);
     }
@@ -103,7 +101,7 @@ export const TweakDown = (inTable, inColumn, inScalar) =>
     var i;
     for(i in inTable.Children)
     {
-        inTable.Children[i].Sums[inColumn] *= inScalar;
+        inTable.Children[i].Sums[inColumn].Value *= inScalar;
         TweakDown(inTable.Children[i], inColumn, inScalar);
     }
 };

@@ -52,13 +52,15 @@ var App = {
 };
 App.CreateEdit = (inTable, inColumn, inAmount) =>
 {
-    var i, j, k;
+    var column;
     var oldSum, newSum;
     var path;
     
-    oldSum = inTable.Sums[inColumn];
+    column = inTable.Sums[inColumn];
+    oldSum = column.Value;
     newSum = oldSum*inAmount;
-    inTable.Sums[inColumn] = newSum;
+    column.Value = newSum;
+    column.Tweak += inAmount;
     path = [];
 
     TweakUp(inTable, inColumn, newSum - oldSum, path);
@@ -94,6 +96,7 @@ App.Pivot = (inArray) =>
         Sums:[]
     };
     PivotTree(root, copy, App.Model.Sums);
+    SumRows(root, App.Model.Sums);
     tree = {
         Pivot: copy,
         Nodes: root.Children
@@ -126,7 +129,8 @@ Render.Branch = (inTable, inPath, inApp) =>
         ${inTable.Sums.map( (inItem, inIndex)=>{
             return html`
             <div class="Cell" @click=${ ()=>{inApp.CreateEdit(inTable, inIndex, 1.33);} }>
-                ${inItem.toFixed(2)}
+                ${inItem.Tweak} |
+                ${inItem.Value.toFixed(2)}
             </div>
             `;
         } )}
