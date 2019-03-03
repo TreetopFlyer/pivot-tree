@@ -60,7 +60,7 @@ App.CreateEdit = (inTable, inColumn, inAmount) =>
     oldSum = column.Value;
     newSum = oldSum*inAmount;
     column.Value = newSum;
-    column.Tweak += inAmount;
+    column.Tweak = inAmount;
     path = [];
 
     TweakUp(inTable, inColumn, newSum - oldSum, path);
@@ -68,9 +68,25 @@ App.CreateEdit = (inTable, inColumn, inAmount) =>
 
     Render.Update(App);  
 };
-App.RemoveEdit = (inIndex) =>
+App.RemoveEdit = (inTable, inColumn) =>
 {
+    var column;
+    var oldSum, newSum;
+    var path;
+    
+    inAmount = 
 
+    column = inTable.Sums[inColumn];
+    oldSum = column.Value;
+    newSum = oldSum;
+    column.Value = newSum;
+    column.Tweak += inAmount;
+    path = [];
+
+    TweakUp(inTable, inColumn, newSum - oldSum, path);
+    TweakDown(inTable, inColumn, inAmount);
+
+    Render.Update(App);  
 };
 App.Pivot = (inArray) =>
 {
