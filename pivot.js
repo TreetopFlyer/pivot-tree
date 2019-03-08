@@ -61,7 +61,7 @@ export const SumRows = (inTable, inSums) =>
     inTable.Sums = [];
     for(i in inSums)
     {
-        inTable.Sums[i] = {Value:0, Tweak:0};
+        inTable.Sums[i] = {Value:0, Local:1, Parent:1, Child:0};
         column = MapColumn(inTable, inSums[i]);
         for(j in inTable.Rows)
         {
@@ -83,26 +83,34 @@ export const MapColumn = (inTable, inKey) =>
     }
 };
 
-export const TweakUp = (inTable, inColumn, inDelta, inPath) =>
+export const TweakUp = (inTable, inColumn, inPath) =>
 {
+    var childColumn;
+    var childSum;
+    childColumn = inTable.Sums[inColumn];
+    childSum = (childColumn.Value*childColumn.Local) - (childColumn.Value);
     if(inTable.Parent)
     {
-        inTable.Parent.Sums[inColumn].Value += inDelta;
+        inTable.Parent.Sums[inColumn].Child += childSum;
         inPath.unshift(inTable.Name);
-        TweakUp(inTable.Parent, inColumn, inDelta, inPath);
+        TweakUp(inTable.Parent, inColumn, inPath);
     }
     else
     {
         return inPath;
     }
 };
-export const TweakDown = (inTable, inColumn, inScalar) =>
+export const TweakDown = (inTable, inColumn) =>
 {
     var i;
+    var parentColumn;
+    var parentScalar;
+    parentColumn = inTable.Sums[inColumn];
+    parentScalar = parentColumn.Local * parentColumn.Parent;
     for(i in inTable.Children)
     {
-        inTable.Children[i].Sums[inColumn].Value *= inScalar;
-        TweakDown(inTable.Children[i], inColumn, inScalar);
+        inTable.Children[i].Sums[inColumn].Parent = parentScalar;
+        TweakDown(inTable.Children[i], inColumn, parentScalar);
     }
 };
 

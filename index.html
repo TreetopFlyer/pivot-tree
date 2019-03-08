@@ -52,39 +52,11 @@ var App = {
 };
 App.CreateEdit = (inTable, inColumn, inAmount) =>
 {
-    var column;
-    var oldSum, newSum;
-    var path;
-    
-    column = inTable.Sums[inColumn];
-    oldSum = column.Value;
-    newSum = oldSum*inAmount;
-    column.Value = newSum;
-    column.Tweak = inAmount;
-    path = [];
+    inTable.Sums[inColumn].Local = inAmount;
+    var path = [];
 
-    TweakUp(inTable, inColumn, newSum - oldSum, path);
-    TweakDown(inTable, inColumn, inAmount);
-
-    Render.Update(App);  
-};
-App.RemoveEdit = (inTable, inColumn) =>
-{
-    var column;
-    var oldSum, newSum;
-    var path;
-    
-    inAmount = 
-
-    column = inTable.Sums[inColumn];
-    oldSum = column.Value;
-    newSum = oldSum;
-    column.Value = newSum;
-    column.Tweak += inAmount;
-    path = [];
-
-    TweakUp(inTable, inColumn, newSum - oldSum, path);
-    TweakDown(inTable, inColumn, inAmount);
+    TweakUp(inTable, inColumn, path);
+    TweakDown(inTable, inColumn);
 
     Render.Update(App);  
 };
@@ -145,8 +117,7 @@ Render.Branch = (inTable, inPath, inApp) =>
         ${inTable.Sums.map( (inItem, inIndex)=>{
             return html`
             <div class="Cell" @click=${ ()=>{inApp.CreateEdit(inTable, inIndex, 1.33);} }>
-                ${inItem.Tweak} |
-                ${inItem.Value.toFixed(2)}
+                ${inItem.Value.toFixed(2)} | ${inItem.Local} | ${inItem.Parent} | ${inItem.Child}
             </div>
             `;
         } )}
