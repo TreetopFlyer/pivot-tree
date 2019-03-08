@@ -52,10 +52,16 @@ var App = {
 };
 App.CreateEdit = (inTable, inColumn, inAmount) =>
 {
-    inTable.Sums[inColumn].Local = inAmount;
-    var path = [];
+    var column;
+    var adjust;
+    var path;
 
-    TweakUp(inTable, inColumn, path);
+    inTable.Sums[inColumn].Local += inAmount;
+
+    column = inTable.Sums[inColumn];
+    adjust = (column.Value*column.Local) - (column.Value);
+    path = [];
+    TweakUp(inTable, inColumn, adjust, path);
     TweakDown(inTable, inColumn);
 
     Render.Update(App);  
