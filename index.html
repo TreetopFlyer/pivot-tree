@@ -29,114 +29,149 @@
 import { html, render } from 'https://unpkg.com/lit-html/lit-html.js';
 import { Pivot, PivotTree, SumRows, TweakUp, TweakDown } from './pivot.js';
 
-var App = {
-    Model:{
-        Header:["Thing", "Type", "Cost", "Count"],
-        Sums:  [                 "Cost", "Count"],
-        Rows:  [
-               ["thing1", "a",    1,      1     ],
-               ["thing1", "b",    2,      1     ],
-               ["thing1", "a",    3,      2     ],
-               ["thing1", "b",    4,      2     ],
-               ["thing2", "a",    1,      2     ],
-               ["thing2", "b",    2,      2     ],
-               ["thing2", "a",    3,      2     ],
-               ["thing2", "b",    4,      2     ],
-               ["thing2", "a",    5,      1     ],
-               ["thing2", "b",    6,      1     ],
-               ["thing2", "a",    7,      1     ]
-        ],
-        Trees:[],
-        Active:false 
-    }
+var App;
+App = {}
+App.Model = {
+    Header:["Thing", "Type", "Cost", "Count"],
+    Sums:  [                 "Cost", "Count"],
+    Rows:  [
+            ["thing1", "a",    1,      1     ],
+            ["thing1", "b",    2,      1     ],
+            ["thing1", "a",    3,      2     ],
+            ["thing1", "b",    4,      2     ],
+            ["thing2", "a",    1,      2     ],
+            ["thing2", "b",    2,      2     ],
+            ["thing2", "a",    3,      2     ],
+            ["thing2", "b",    4,      2     ],
+            ["thing2", "a",    5,      1     ],
+            ["thing2", "b",    6,      1     ],
+            ["thing2", "a",    7,      1     ]
+    ],
+    Trees:[],
+    Active:false
 };
-App.CreateEdit = (inTable, inColumn, inAmount) =>
-{
-    var column;
-    var adjust;
-    var path;
-
-    inTable.Sums[inColumn].Local += inAmount;
-
-    column = inTable.Sums[inColumn];
-    adjust = (column.Value*column.Local) - (column.Value);
-    path = [];
-    TweakUp(inTable, inColumn, adjust, path);
-    TweakDown(inTable, inColumn);
-
-    Render.Update(App);  
-};
-App.Pivot = (inArray) =>
-{
-    var i;
-    var check, copy, root, tree;
-    check = inArray.join("|>-");
-    for(i in App.Model.Trees)
+App.Methods = {
+    EditCreate: (inTable, inColumn, inAmount) =>
     {
-        if(App.Model.Trees[i].Pivot.join("|>-") == check)
-        {
-            App.Model.Active = App.Model.Trees[i];
-            Render.Update();
-            return;
-        }
-    }
+        var column;
+        var adjust;
+        var path;
 
-    copy = check.split("|>-");
-    root = {
-        Name:"Root",
-        Header:App.Model.Header,
-        Rows:App.Model.Rows,
-        Parent:false,
-        Sums:[]
-    };
-    PivotTree(root, copy, App.Model.Sums);
-    SumRows(root, App.Model.Sums);
-    tree = {
-        Pivot: copy,
-        Nodes: root.Children
-    };
-    App.Model.Trees.push(tree);
-    App.Model.Active = tree;
-    Render.Update(App);
+        column = inTable.Sums[inColumn];
+        column.Local += inAmount;
+        adjust = (column.Value*column.Local) - (column.Value);
+        TweakUp(inTable, inColumn, adjust);
+        TweakDown(inTable, inColumn);
+
+        Render.Update(App.Model, App.Methods);
+    },
+    GoalCreate: (inTable, inColumn, inAmount) =>
+    {
+        var column;
+        var adjust;
+        var path;
+
+        column = inTable.Sums[inColumn];
+        if(column.Goal)
+        {
+        }
+        column.Goal = inAmount;
+        Render.Update(App.Model, App.Methods);
+    },
+    PivotCreate: (inArray) =>
+    {
+        var i;
+        var check, copy, root, tree;
+        check = inArray.join("|>-");
+        for(i in App.Model.Trees)
+        {
+            if(App.Model.Trees[i].Pivot.join("|>-") == check)
+            {
+                App.Model.Active = App.Model.Trees[i];
+                Render.Update(App.Model, App.Methods);
+                return;
+            }
+        }
+
+        copy = check.split("|>-");
+        root = {
+            Name:"Root",
+            Header:App.Model.Header,
+            Rows:App.Model.Rows,
+            Parent:false,
+            Sums:[]
+        };
+        PivotTree(root, copy, App.Model.Sums);
+        SumRows(root, App.Model.Sums);
+        tree = {
+            Pivot: copy,
+            Nodes: root.Children,
+            Goals: [],
+            Edits: []
+        };
+        App.Model.Trees.push(tree);
+        App.Model.Active = tree;
+        Render.Update(App.Model, App.Methods);
+    }
 };
 
 var Render = {};
-Render.Update = (inApp) =>
+Render.Update = (inModel, inMethods) =>
 {
-    render( Render.Tree(inApp), document.querySelector("#App"));
+    render( Render.Layout(inModel, inMethods), document.querySelector("#App"));
 };
-Render.Tree = (inApp) =>
+Render.Layout = (inModel, inMethods) =>
 {
-    return inApp.Model.Active.Nodes.map( (inBranch)=>{
-        return Render.Branch(inBranch, [], inApp)
+    return html`
+    <div>
+        <h3>Pivots</h3>
+    </div>
+    <div>
+        <h3>Goals</h3>
+    </div>
+    <div>
+        <h3>Edits</h3>
+    </div>
+    <div>
+        <h3>View</h3>
+        ${Render.Tree(inModel, inMethods)}
+    </div>
+    `;
+};
+Render.Tree = (inModel, inMethods) =>
+{
+    return inModel.Active.Nodes.map( (inBranch)=>{
+        return Render.Branch(inBranch, inMethods, [])
     });
-}
-Render.Branch = (inTable, inPath, inApp) =>
+};
+Render.Branch = (inModel, inMethods, inPath) =>
 {
-    var path = inPath.concat([inTable.Name]);
+    var path = inPath.concat([inModel.Name]);
     return html`
     <div class="Row">
         <div class="Name">
-            ${inTable.Name}
+            ${inModel.Name}
         </div>
         <div class="Columns">
-        ${inTable.Sums.map( (inItem, inIndex)=>{
+        ${inModel.Sums.map( (inItem, inIndex)=>{
             return html`
-            <div class="Cell" @click=${ ()=>{inApp.CreateEdit(inTable, inIndex, 1.33);} }>
+            <div class="Cell" @click=${ ()=>{inMethods.EditCreate(inModel, inIndex, 1.33);} }>
                 ${inItem.Value.toFixed(2)} | ${inItem.Local} | ${inItem.Parent} | ${inItem.Child}
+                <br/>
+                ${}
             </div>
             `;
         } )}
         </div>
-        ${inTable.Children.map( (inItem)=>{
-            return Render.Branch(inItem, path, inApp);
+        ${inModel.Children.map( (inItem)=>{
+            return Render.Branch(inItem, inMethods, path);
         } )}
     </div>
     `;
 };
 
 /*************************/
-App.Pivot(["Thing", "Type"]);
-App.Pivot(["Type", "Thing"]);
+App.Methods.PivotCreate(["Thing", "Type"]);
+App.Methods.PivotCreate(["Type", "Thing"]);
 
 </script>

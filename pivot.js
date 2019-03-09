@@ -83,17 +83,12 @@ export const MapColumn = (inTable, inKey) =>
     }
 };
 
-export const TweakUp = (inTable, inColumn, inAmount, inPath) =>
+export const TweakUp = (inTable, inColumn, inAmount) =>
 {
     if(inTable.Parent)
     {
         inTable.Parent.Sums[inColumn].Child += inAmount;
-        inPath.unshift(inTable.Name);
-        TweakUp(inTable.Parent, inColumn, inAmount, inPath);
-    }
-    else
-    {
-        return inPath;
+        TweakUp(inTable.Parent, inColumn, inAmount);
     }
 };
 export const TweakDown = (inTable, inColumn) =>
