@@ -23,6 +23,23 @@
 
     text-align:right;
 }
+.Section
+{
+    clear:both;
+}
+.Pivot
+{
+    float:left;
+    border:1px solid #000;
+    margin:5px;
+}
+.Pivot span
+{
+    display:inline-block;
+    padding:10px;
+    margin:3px;
+    background:#FC0;
+}
 </style>
 <div id="App"></div>
 <script type="module">
@@ -112,6 +129,11 @@ App.Methods = {
         App.Model.Trees.push(tree);
         App.Model.Active = tree;
         Render.Update(App.Model, App.Methods);
+    },
+    PivotSelect: (inPivot)=>
+    {
+        App.Model.Active = inPivot;
+        Render.Update(App.Model, App.Methods);
     }
 };
 
@@ -123,18 +145,31 @@ Render.Update = (inModel, inMethods) =>
 Render.Layout = (inModel, inMethods) =>
 {
     return html`
-    <div>
+    <div class="Section">
         <h3>Pivots</h3>
+        ${inModel.Trees.map( (inItem)=>{
+            return Render.Pivot(inItem, inMethods);
+        })}
     </div>
-    <div>
+    <div class="Section">
         <h3>Goals</h3>
     </div>
-    <div>
+    <div class="Section">
         <h3>Edits</h3>
     </div>
-    <div>
+    <div class="Section">
         <h3>View</h3>
         ${Render.Tree(inModel, inMethods)}
+    </div>
+    `;
+};
+Render.Pivot = (inModel, inMethods) =>
+{
+    return html`
+    <div class="Pivot" @click=${ ()=>{ inMethods.PivotSelect(inModel); } }>
+        ${inModel.Pivot.map( (inItem)=>{
+            return html`<span style="">${inItem}</span>`;
+        })} 
     </div>
     `;
 };
@@ -158,7 +193,6 @@ Render.Branch = (inModel, inMethods, inPath) =>
             <div class="Cell" @click=${ ()=>{inMethods.EditCreate(inModel, inIndex, 1.33);} }>
                 ${inItem.Value.toFixed(2)} | ${inItem.Local} | ${inItem.Parent} | ${inItem.Child}
                 <br/>
-                ${}
             </div>
             `;
         } )}
