@@ -91,6 +91,11 @@ App.Methods = {
         column = inTable.Sums[inColumn];
         if(column.Goal)
         {
+
+        }
+        else
+        {
+            App.Model.Active.Goals.push({Table:inTable, Column:column});
         }
         column.Goal = inAmount;
         Render.Update(App.Model, App.Methods);
@@ -163,20 +168,31 @@ Render.Layout = (inModel, inMethods) =>
     </div>
     `;
 };
-Render.Pivot = (inModel, inMethods) =>
+Render.Pivot  = (inModel, inMethods) =>
 {
     return html`
     <div class="Pivot" @click=${ ()=>{ inMethods.PivotSelect(inModel); } }>
-        ${inModel.Pivot.map( (inItem)=>{
-            return html`<span style="">${inItem}</span>`;
-        })} 
+        <div class="Order">
+            <h4>Columns</h4>
+            ${inModel.Pivot.map( (inItem)=>{
+                return html`<span style="">${inItem}</span>`;
+            })} 
+        </div>
+        <div class="Goals">
+            <h4>Goals</h4>
+            <ul>
+            ${inModel.Goals.map( (inItem)=>{
+                return html`<li>${inItem.Table.Name+"."+inItem.Column.Goal}</li>`;
+            })} 
+            </ul>
+        </div>
     </div>
     `;
 };
 Render.Tree = (inModel, inMethods) =>
 {
     return inModel.Active.Nodes.map( (inBranch)=>{
-        return Render.Branch(inBranch, inMethods, [])
+        return Render.Branch(inBranch, inMethods, []);
     });
 };
 Render.Branch = (inModel, inMethods, inPath) =>
@@ -189,10 +205,21 @@ Render.Branch = (inModel, inMethods, inPath) =>
         </div>
         <div class="Columns">
         ${inModel.Sums.map( (inItem, inIndex)=>{
+
+            var markupGoal;
+            if(inItem.Goal)
+            {
+                markupGoal = html`<br/>`;
+            }
+            else
+            {
+                markupGoal = html`<br/><button @click=${()=>{inMethods.GoalCreate(inModel, inIndex, 100)} }>+</button>`;
+            }
+
             return html`
             <div class="Cell" @click=${ ()=>{inMethods.EditCreate(inModel, inIndex, 1.33);} }>
                 ${inItem.Value.toFixed(2)} | ${inItem.Local} | ${inItem.Parent} | ${inItem.Child}
-                <br/>
+                ${markupGoal}
             </div>
             `;
         } )}
