@@ -70,36 +70,66 @@ App.Model = {
 App.Methods = {
     ResolvePath: (inPath) =>
     {
-        console.log(inPath, PathDown(App.Model.Active.Root, inPath, 0));
+        return PathDown(App.Model.Active.Root, inPath, 0);
     },
-    EditCreate: (inTable, inColumn, inAmount) =>
+    ResolveColumn: (inTable, inKey) =>
     {
+        var i;
+        for(i in inTable.Header)
+        {
+            if(inTable.Header[i] == inKey)
+            {
+                return i;
+            }
+        }
+    },
+    ResolvePivot: (inArray) => 
+    {
+        var i, j;
+        var joiner = "|>-";
+        var tree;
+        var check = inArray.join(joiner);
+        for(i in App.Model.Trees)
+        {
+            if(check == App.Model.Trees[i].Pivot.join(joiner) )
+            {
+                return tree;
+            }
+        }
+        return false;
+    },
+    EditCreate: (inPath, inColumn, inAmount) =>
+    {
+        var table;
         var column;
         var adjust;
         var path;
 
-        column = inTable.Sums[inColumn];
+        table = App.Methods.ResolvePath(inPath);
+        column = table.Sums[inColumn];
         column.Local += inAmount;
         adjust = (column.Value*column.Local) - (column.Value);
-        TweakUp(inTable, inColumn, adjust);
-        TweakDown(inTable, inColumn);
+        TweakUp(table, inColumn, adjust);
+        TweakDown(table, inColumn);
 
         Render.Update(App.Model, App.Methods);
     },
-    GoalCreate: (inTable, inColumn, inAmount) =>
+    GoalCreate: (inPath, inColumn, inAmount) =>
     {
+        var table;
         var column;
         var adjust;
         var path;
 
-        column = inTable.Sums[inColumn];
+        table = App.Methods.ResolvePath(inPath);
+        column = table.Sums[inColumn];
         if(column.Goal)
         {
 
         }
         else
         {
-            App.Model.Active.Goals.push({Table:inTable, Column:column});
+            App.Model.Active.Goals.push({Table:table, Column:column});
         }
         column.Goal = inAmount;
         Render.Update(App.Model, App.Methods);
@@ -107,19 +137,14 @@ App.Methods = {
     PivotCreate: (inArray) =>
     {
         var i;
-        var check, copy, root, tree;
-        check = inArray.join("|>-");
-        for(i in App.Model.Trees)
+        var root, tree;
+        if(App.Methods.ResolvePivot(inArray))
         {
-            if(App.Model.Trees[i].Pivot.join("|>-") == check)
-            {
-                App.Model.Active = App.Model.Trees[i];
-                Render.Update(App.Model, App.Methods);
-                return;
-            }
+            App.Model.Active = App.Model.Trees[i];
+            Render.Update(App.Model, App.Methods);
+            return;
         }
 
-        copy = check.split("|>-");
         root = {
             Name:"Root",
             Header:App.Model.Header,
@@ -127,10 +152,10 @@ App.Methods = {
             Parent:false,
             Sums:[]
         };
-        PivotTree(root, copy, App.Model.Sums);
+        PivotTree(root, inArray, App.Model.Sums);
         SumRows(root, App.Model.Sums);
         tree = {
-            Pivot: copy,
+            Pivot: inArray,
             Root: root,
             Nodes: root.Children,
             Goals: [],
@@ -218,11 +243,11 @@ Render.Branch = (inModel, inMethods, inPath) =>
             }
             else
             {
-                markupGoal = html`<br/><button @click=${()=>{inMethods.GoalCreate(inModel, inIndex, 100)} }>+</button>`;
+                markupGoal = html`<br/><button @click=${()=>{inMethods.GoalCreate(path, inIndex, 100)} }>+</button>`;
             }
 
             return html`
-            <div class="Cell" @click=${ ()=>{inMethods.EditCreate(inModel, inIndex, 1.33);} }>
+            <div class="Cell" @click=${ ()=>{inMethods.EditCreate(path, inIndex, 1.33);} }>
                 ${inItem.Value.toFixed(2)} | ${inItem.Local} | ${inItem.Parent} | ${inItem.Child}
                 ${markupGoal}
             </div>
