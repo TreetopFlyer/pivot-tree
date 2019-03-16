@@ -72,14 +72,27 @@ App.Methods = {
     {
         return PathDown(App.Model.Active.Root, inPath, 0);
     },
-    ResolveColumn: (inTable, inKey) =>
+    ResolveColumn: (inTable, inName) =>
     {
         var i;
-        for(i in inTable.Header)
+        for(i in App.Model.Header)
         {
-            if(inTable.Header[i] == inKey)
+            if(App.Model.Header[i] == inName)
             {
                 return i;
+            }
+        }
+    },
+    ResolveSum: (inTable, inName) =>
+    {
+        console.log("finding sum", inName);
+        var i;
+        var sum;
+        for(i in App.Model.Sums)
+        {
+            if(App.Model.Sums[i] == inName)
+            {
+                return inTable.Sums[i];
             }
         }
     },
@@ -117,21 +130,21 @@ App.Methods = {
     GoalCreate: (inPath, inColumn, inAmount) =>
     {
         var table;
-        var column;
+        var sum;
         var adjust;
         var path;
 
         table = App.Methods.ResolvePath(inPath);
-        column = table.Sums[inColumn];
-        if(column.Goal)
+        sum = App.Methods.ResolveSum(table, inColumn);
+        if(sum.Goal)
         {
 
         }
         else
         {
-            App.Model.Active.Goals.push({Table:table, Column:column});
+            App.Model.Active.Goals.push({Table:table, Column:sum});
         }
-        column.Goal = inAmount;
+        sum.Goal = inAmount;
         Render.Update(App.Model, App.Methods);
     },
     PivotCreate: (inArray) =>
@@ -243,7 +256,7 @@ Render.Branch = (inModel, inMethods, inPath) =>
             }
             else
             {
-                markupGoal = html`<br/><button @click=${()=>{inMethods.GoalCreate(path, inIndex, 100)} }>+</button>`;
+                markupGoal = html`<br/><button @click=${()=>{inMethods.GoalCreate(path, inItem.Name, 100)} }>+</button>`;
             }
 
             return html`
