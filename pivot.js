@@ -83,6 +83,32 @@ export const MapColumn = (inTable, inKey) =>
     }
 };
 
+export const PathDown = (inTable, inPath, inIndex) =>
+{
+    var i;
+    var child;
+    var lookup;
+
+    lookup = inPath[inIndex];
+    for(i in inTable.Children)
+    {
+        child = inTable.Children[i];
+        if(child.Name === lookup)
+        {
+            if(inPath.length-1 == inIndex)
+            {
+                return child;
+            }
+            else
+            {
+                return PathDown(child, inPath, inIndex+1);
+            }
+            break;
+        }
+    }
+    return false;
+};
+
 export const TweakUp = (inTable, inColumn, inAmount) =>
 {
     if(inTable.Parent)

@@ -44,7 +44,7 @@
 <div id="App"></div>
 <script type="module">
 import { html, render } from 'https://unpkg.com/lit-html/lit-html.js';
-import { Pivot, PivotTree, SumRows, TweakUp, TweakDown } from './pivot.js';
+import { Pivot, PivotTree, SumRows, TweakUp, TweakDown, PathDown } from './pivot.js';
 
 var App;
 App = {}
@@ -68,6 +68,10 @@ App.Model = {
     Active:false
 };
 App.Methods = {
+    ResolvePath: (inPath) =>
+    {
+        console.log(inPath, PathDown(App.Model.Active.Root, inPath, 0));
+    },
     EditCreate: (inTable, inColumn, inAmount) =>
     {
         var column;
@@ -127,6 +131,7 @@ App.Methods = {
         SumRows(root, App.Model.Sums);
         tree = {
             Pivot: copy,
+            Root: root,
             Nodes: root.Children,
             Goals: [],
             Edits: []
@@ -200,7 +205,7 @@ Render.Branch = (inModel, inMethods, inPath) =>
     var path = inPath.concat([inModel.Name]);
     return html`
     <div class="Row">
-        <div class="Name">
+        <div class="Name" @click=${  ()=>{inMethods.ResolvePath(path);}  }>
             ${inModel.Name}
         </div>
         <div class="Columns">
