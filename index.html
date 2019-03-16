@@ -72,27 +72,15 @@ App.Methods = {
     {
         return PathDown(App.Model.Active.Root, inPath, 0);
     },
-    ResolveColumn: (inTable, inName) =>
+    ResolveSum: (inName) =>
     {
-        var i;
-        for(i in App.Model.Header)
-        {
-            if(App.Model.Header[i] == inName)
-            {
-                return i;
-            }
-        }
-    },
-    ResolveSum: (inTable, inName) =>
-    {
-        console.log("finding sum", inName);
         var i;
         var sum;
-        for(i in App.Model.Sums)
+        for(i=0; i<App.Model.Sums.length; i++)
         {
             if(App.Model.Sums[i] == inName)
             {
-                return inTable.Sums[i];
+                return i;
             }
         }
     },
@@ -102,7 +90,7 @@ App.Methods = {
         var joiner = "|>-";
         var tree;
         var check = inArray.join(joiner);
-        for(i in App.Model.Trees)
+        for(i=0; i<App.Model.Trees.length; i++)
         {
             if(check == App.Model.Trees[i].Pivot.join(joiner) )
             {
@@ -115,27 +103,29 @@ App.Methods = {
     {
         var table;
         var column;
+        var sum;
         var adjust;
-        var path;
 
         table = App.Methods.ResolvePath(inPath);
-        column = table.Sums[inColumn];
-        column.Local += inAmount;
-        adjust = (column.Value*column.Local) - (column.Value);
-        TweakUp(table, inColumn, adjust);
-        TweakDown(table, inColumn);
+        column = App.Methods.ResolveSum(inColumn);
+        sum = table.Sums[column];
+        sum.Local += inAmount;
+        adjust = (sum.Value*sum.Local) - (sum.Value);
+        TweakUp(table, column, adjust);
+        TweakDown(table, column);
 
         Render.Update(App.Model, App.Methods);
     },
     GoalCreate: (inPath, inColumn, inAmount) =>
     {
         var table;
+        var column;
         var sum;
         var adjust;
-        var path;
 
         table = App.Methods.ResolvePath(inPath);
-        sum = App.Methods.ResolveSum(table, inColumn);
+        column = App.Methods.ResolveSum(inColumn);
+        sum = table.Sums[column];
         if(sum.Goal)
         {
 
@@ -243,7 +233,7 @@ Render.Branch = (inModel, inMethods, inPath) =>
     var path = inPath.concat([inModel.Name]);
     return html`
     <div class="Row">
-        <div class="Name" @click=${  ()=>{inMethods.ResolvePath(path);}  }>
+        <div class="Name">
             ${inModel.Name}
         </div>
         <div class="Columns">
@@ -260,7 +250,7 @@ Render.Branch = (inModel, inMethods, inPath) =>
             }
 
             return html`
-            <div class="Cell" @click=${ ()=>{inMethods.EditCreate(path, inIndex, 1.33);} }>
+            <div class="Cell" @click=${ ()=>{inMethods.EditCreate(path, inItem.Name, 1.33);} }>
                 ${inItem.Value.toFixed(2)} | ${inItem.Local} | ${inItem.Parent} | ${inItem.Child}
                 ${markupGoal}
             </div>

@@ -7,12 +7,12 @@ export const Pivot = (inTable, inColumn) =>
     var column;
     output = [];
 
-    rows: for(i in inTable.Rows)
+    rows: for(i=0; i<inTable.Rows.length; i++)
     {
         row = inTable.Rows[i];
         column = MapColumn(inTable, inColumn);
         cell = row[column].toString().toLowerCase();
-        uniques: for(j in output)
+        uniques: for(j=0; j<output.length; j++)
         {
             if(cell == output[j].Name)
             {
@@ -39,14 +39,14 @@ export const PivotTree = (inTable, inColumns, inSums, inDepth) =>
     depth++;
     if(depth == inColumns.length)
     {
-        for(i in inTable.Children)
+        for(i=0; i<inTable.Children.length; i++)
         {
             SumRows(inTable.Children[i], inSums);
         }
     }
     else
     {
-        for(i in inTable.Children)
+        for(i=0; i<inTable.Children.length; i++)
         {
             SumRows(inTable.Children[i], inSums);
             PivotTree(inTable.Children[i], inColumns, inSums, depth);
@@ -59,11 +59,11 @@ export const SumRows = (inTable, inSums) =>
     var i, j;
     var column, row;
     inTable.Sums = [];
-    for(i in inSums)
+    for(i=0; i<inSums.length; i++)
     {
         inTable.Sums[i] = {Name:inSums[i], Value:0, Local:1, Parent:1, Child:0};
         column = MapColumn(inTable, inSums[i]);
-        for(j in inTable.Rows)
+        for(j=0; j<inTable.Rows.length; j++)
         {
             row = inTable.Rows[j];
             inTable.Sums[i].Value += row[column];
@@ -74,7 +74,7 @@ export const SumRows = (inTable, inSums) =>
 export const MapColumn = (inTable, inKey) =>
 {
     var i;
-    for(i in inTable.Header)
+    for(i=0; i<inTable.Header.length; i++)
     {
         if(inTable.Header[i] == inKey)
         {
@@ -90,7 +90,7 @@ export const PathDown = (inTable, inPath, inIndex) =>
     var lookup;
 
     lookup = inPath[inIndex];
-    for(i in inTable.Children)
+    for(i=0; i<inTable.Children.length; i++)
     {
         child = inTable.Children[i];
         if(child.Name === lookup)
@@ -124,7 +124,7 @@ export const TweakDown = (inTable, inColumn) =>
     var parentScalar;
     parentColumn = inTable.Sums[inColumn];
     parentScalar = parentColumn.Local * parentColumn.Parent;
-    for(i in inTable.Children)
+    for(i=0; i<inTable.Children.length; i++)
     {
         inTable.Children[i].Sums[inColumn].Parent = parentScalar;
         TweakDown(inTable.Children[i], inColumn, parentScalar);
