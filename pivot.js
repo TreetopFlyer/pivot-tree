@@ -117,6 +117,7 @@ export const TweakUp = (inTable, inColumn, inAmount) =>
         TweakUp(inTable.Parent, inColumn, inAmount);
     }
 };
+
 export const TweakDown = (inTable, inColumn) =>
 {
     var i;

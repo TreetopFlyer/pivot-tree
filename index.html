@@ -109,11 +109,20 @@ App.Methods = {
         table = App.Methods.ResolvePath(inPath);
         column = App.Methods.ResolveSum(inColumn);
         sum = table.Sums[column];
+        if(sum.Edit)
+        {
+
+        }
+        else
+        {
+            sum.Edit = true;
+            App.Model.Active.Edits.push({Path:inPath, Sum:sum});
+        }
+
         sum.Local += inAmount;
         adjust = (sum.Value*sum.Local) - (sum.Value);
         TweakUp(table, column, adjust);
         TweakDown(table, column);
-
         Render.Update(App.Model, App.Methods);
     },
     GoalCreate: (inPath, inColumn, inAmount) =>
@@ -132,7 +141,7 @@ App.Methods = {
         }
         else
         {
-            App.Model.Active.Goals.push({Table:table, Column:sum});
+            App.Model.Active.Goals.push({Path:inPath, Sum:sum});
         }
         sum.Goal = inAmount;
         Render.Update(App.Model, App.Methods);
@@ -215,7 +224,13 @@ Render.Pivot  = (inModel, inMethods) =>
             <h4>Goals</h4>
             <ul>
             ${inModel.Goals.map( (inItem)=>{
-                return html`<li>${inItem.Table.Name+"."+inItem.Column.Goal}</li>`;
+                return html`<li>${inItem.Path.join("/")}.${inItem.Sum.Name}: ${inItem.Sum.Goal}</li>`;
+            })} 
+            </ul>
+            <h4>Edits</h4>
+            <ul>
+            ${inModel.Edits.map( (inItem)=>{
+                return html`<li>${inItem.Path.join("/")}.${inItem.Sum.Name}: ${inItem.Sum.Local}</li>`;
             })} 
             </ul>
         </div>
