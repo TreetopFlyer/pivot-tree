@@ -251,6 +251,27 @@ App.Methods = {
         }
         console.log(JSON.stringify(output));
         return output;
+    },
+    StateLoad: (inState) => 
+    {
+        var i, j;
+        var pivot;
+        var item;
+        for(i=0; i<inState.Pivots.length; i++)
+        {
+            pivot = inState.Pivots[i];
+            App.Methods.PivotCreate(pivot.Pivot);
+            for(j=0; j<pivot.Edits.length; j++)
+            {
+                item = pivot.Edits[j];
+                App.Methods.EditCreate(item.Path, item.Column, item.Amount);
+            }
+            for(j=0; j<pivot.Goals.length; j++)
+            {
+                item = pivot.Goals[j];
+                App.Methods.GoalCreate(item.Path, item.Column, item.Amount);
+            }
+        }
     }
 };
 
@@ -274,20 +295,6 @@ Render.Layout = (inModel, inMethods) =>
     </div>
     <div class="Section">
         <h3>View</h3>
-        <table cellpadding="0" cellspacing="0">
-            <tr>
-                <th class="Column"></th>
-                ${inModel.Sums.map( (inItem)=>
-                {
-                    return html`
-                    <th class="Value">${inItem}</th>
-                    <th class="Local">(xL</th>
-                    <th class="Parent">xP</th>
-                    <th class="Child">+C</th>
-                    <th class="Total">=T</th>
-                    <th class="Goal">-G)</th>`;
-                })}
-            </tr>
         ${Render.Tree(inModel, inMethods)}
         </table>
     </div>
@@ -322,9 +329,28 @@ Render.Pivot  = (inModel, inMethods) =>
 };
 Render.Tree = (inModel, inMethods) =>
 {
-    return inModel.Active.Nodes.map( (inBranch)=>{
+    if(!inModel.Active)
+    {
+        return false;
+    }
+    return html`
+    <table cellpadding="0" cellspacing="0">
+    <tr>
+        <th class="Column"></th>
+        ${inModel.Sums.map( (inItem)=>
+        {
+            return html`
+            <th class="Value">${inItem}</th>
+            <th class="Local">(xL</th>
+            <th class="Parent">xP</th>
+            <th class="Child">+C</th>
+            <th class="Total">=T</th>
+            <th class="Goal">-G)</th>`;
+        })}
+    </tr>
+    ${inModel.Active.Nodes.map( (inBranch)=>{
         return Render.Branch(inBranch, inMethods, []);
-    });
+    })}`;
 };
 Render.Branch = (inModel, inMethods, inPath) =>
 {
@@ -367,7 +393,10 @@ Render.Branch = (inModel, inMethods, inPath) =>
 };
 
 /*************************/
+/*
 App.Methods.PivotCreate(["Thing", "Type"]);
 App.Methods.PivotCreate(["Type", "Thing"]);
-
+*/
+var state = {"Data":{"Source":"","Destination":""},"Pivots":[{"Pivot":["Thing","Type"],"Goals":[{"Path":["thing1"],"Column":"Count","Amount":100},{"Path":["thing1","a"],"Column":"Count","Amount":100}],"Edits":[{"Path":["thing1"],"Column":"Cost","Amount":10.31}]},{"Pivot":["Type","Thing"],"Goals":[{"Path":["a"],"Column":"Cost","Amount":100}],"Edits":[{"Path":["a"],"Column":"Cost","Amount":3.33},{"Path":["a","thing1"],"Column":"Cost","Amount":3.33}]}]};
+App.Methods.StateLoad(state);
 </script>
