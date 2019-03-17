@@ -40,6 +40,27 @@
     margin:3px;
     background:#FC0;
 }
+th
+{
+    border-bottom:1px solid #333;
+    text-align:center;
+}
+td
+{
+    text-align:right;
+    padding:3px 0px 20px 10px;
+}
+td.Value
+{
+    padding-left:40px;
+    background:#ddd;
+    font-weight:bold;
+    text-align:right;
+}
+td.Goal
+{
+    padding-right:20px;
+}
 </style>
 <div id="App"></div>
 <script type="module">
@@ -206,7 +227,22 @@ Render.Layout = (inModel, inMethods) =>
     </div>
     <div class="Section">
         <h3>View</h3>
+        <table cellpadding="0" cellspacing="0">
+            <tr>
+                <th class="Column"></th>
+                ${inModel.Sums.map( (inItem)=>
+                {
+                    return html`
+                    <th class="Value">${inItem}</th>
+                    <th class="Local">(xL</th>
+                    <th class="Parent">xP</th>
+                    <th class="Child">+C</th>
+                    <th class="Total">=T</th>
+                    <th class="Goal">-G)</th>`;
+                })}
+            </tr>
         ${Render.Tree(inModel, inMethods)}
+        </table>
     </div>
     `;
 };
@@ -247,35 +283,39 @@ Render.Branch = (inModel, inMethods, inPath) =>
 {
     var path = inPath.concat([inModel.Name]);
     return html`
-    <div class="Row">
-        <div class="Name">
-            ${inModel.Name}
-        </div>
-        <div class="Columns">
+    <tr>
+        <td>
+            ${path.join("/")}
+        </td>
         ${inModel.Sums.map( (inItem, inIndex)=>{
 
+            var total;
             var markupGoal;
+            total = inItem.Value * inItem.Local * inItem.Parent + inItem.Child;
             if(inItem.Goal)
             {
-                markupGoal = html`<br/>`;
+                markupGoal = html`${inItem.Goal}`;
             }
             else
             {
-                markupGoal = html`<br/><button @click=${()=>{inMethods.GoalCreate(path, inItem.Name, 100)} }>+</button>`;
+                markupGoal = html`<button @click=${()=>{inMethods.GoalCreate(path, inItem.Name, 100)} }>+</button>`;
             }
 
             return html`
-            <div class="Cell" @click=${ ()=>{inMethods.EditCreate(path, inItem.Name, 1.33);} }>
-                ${inItem.Value.toFixed(2)} | ${inItem.Local} | ${inItem.Parent} | ${inItem.Child}
-                ${markupGoal}
-            </div>
+            <td class="Value" @click=${ ()=>{inMethods.EditCreate(path, inItem.Name, 1.33);} }>
+                ${inItem.Value.toFixed(2)}
+            </td>
+            <td class="Local">${inItem.Local}</td>
+            <td class="Parent">${inItem.Parent}</td>
+            <td class="Child">${inItem.Child}</td>
+            <td class="Total">${total.toFixed(2)}</td>
+            <td class="Goal">${markupGoal}</td>
             `;
         } )}
-        </div>
-        ${inModel.Children.map( (inItem)=>{
-            return Render.Branch(inItem, inMethods, path);
-        } )}
-    </div>
+    </tr>
+    ${inModel.Children.map( (inItem)=>{
+        return Render.Branch(inItem, inMethods, path);
+    } )}
     `;
 };
 
