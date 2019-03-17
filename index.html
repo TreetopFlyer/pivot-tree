@@ -202,6 +202,55 @@ App.Methods = {
     {
         App.Model.Active = inPivot;
         Render.Update(App.Model, App.Methods);
+    },
+    StateSave: () =>
+    {
+        var i, j;
+        var output;
+        var pivot;
+        var tree;
+        var record;
+        var item;
+
+        output = {
+            Data:{
+                Source:"",
+                Destination:"",
+            },
+            Pivots:[]
+        };
+
+        for(i=0; i<App.Model.Trees.length; i++)
+        {
+            pivot = {
+                Pivot:[],
+                Goals:[],
+                Edits:[]
+            };
+            output.Pivots.push(pivot);
+            tree = App.Model.Trees[i];
+            pivot.Pivot = tree.Pivot;
+            for(j=0; j<tree.Edits.length; j++)
+            {
+                item = tree.Edits[j];
+                pivot.Edits.push({
+                    Path: item.Path,
+                    Column: item.Sum.Name,
+                    Amount: item.Sum.Local
+                });
+            }
+            for(j=0; j<tree.Goals.length; j++)
+            {
+                item = tree.Goals[j];
+                pivot.Goals.push({
+                    Path: item.Path,
+                    Column: item.Sum.Name,
+                    Amount: item.Sum.Goal
+                });
+            }
+        }
+        console.log(JSON.stringify(output));
+        return output;
     }
 };
 
@@ -214,16 +263,14 @@ Render.Layout = (inModel, inMethods) =>
 {
     return html`
     <div class="Section">
+        <h3>State</h3>
+        <button @click=${ ()=>{inMethods.StateSave();} }>Save</button>
+    </div>
+    <div class="Section">
         <h3>Pivots</h3>
         ${inModel.Trees.map( (inItem)=>{
             return Render.Pivot(inItem, inMethods);
         })}
-    </div>
-    <div class="Section">
-        <h3>Goals</h3>
-    </div>
-    <div class="Section">
-        <h3>Edits</h3>
     </div>
     <div class="Section">
         <h3>View</h3>
