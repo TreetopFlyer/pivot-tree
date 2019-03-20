@@ -70,9 +70,10 @@ import { Pivot, PivotTree, SumRows, TweakUp, TweakDown, PathDown } from './pivot
 var App;
 App = {}
 App.Model = {
-    Header:["Thing", "Type", "Cost", "Count"],
-    Sums:  [                 "Cost", "Count"],
-    Rows:  [
+    Header: ["Thing", "Type", "Cost", "Count"],
+    Sums:   [                 "Cost", "Count"],
+    Pivot:  ["Thing", "Type",                ],
+    Rows:   [
             ["thing1", "a",    1,      1     ],
             ["thing1", "b",    2,      1     ],
             ["thing1", "a",    3,      2     ],
@@ -86,9 +87,31 @@ App.Model = {
             ["thing2", "a",    7,      1     ]
     ],
     Trees:[],
-    Active:false
+    Active:false,
+    Form:{
+        Pivot:{
+            Open:[],
+            Closed:[]
+        }
+    }
 };
 App.Methods = {
+    FormPivotReset: () =>
+    {
+        var form;
+        form = App.Model.Form.Pivot;
+        form.Open = App.Model.Pivot.slice();
+        form.Closed = [];
+        Render.Update(App.Model, App.Methods);
+    },
+    FormPivotSelect: (inIndex) =>
+    {
+        console.log(inIndex);
+        var form;
+        form = App.Model.Form.Pivot;
+        form.Closed.push(form.Open.splice(inIndex, 1));
+        Render.Update(App.Model, App.Methods);
+    },
     ResolvePath: (inPath) =>
     {
         return PathDown(App.Model.Active.Root, inPath, 0);
@@ -292,6 +315,7 @@ Render.Layout = (inModel, inMethods) =>
         ${inModel.Trees.map( (inItem)=>{
             return Render.Pivot(inItem, inMethods);
         })}
+        ${Render.PivotForm(inModel.Form.Pivot, inMethods)}
     </div>
     <div class="Section">
         <h3>View</h3>
@@ -324,6 +348,43 @@ Render.Pivot  = (inModel, inMethods) =>
             })} 
             </ul>
         </div>
+    </div>
+    `;
+};
+Render.PivotForm = (inModel, inMethods) =>
+{
+    return html`
+    <div>
+        <ul>
+            ${inModel.Closed.map( (inItem, inIndex)=>{
+                return html`<li>${inItem}</li>`
+            })}
+        </ul>
+        <select @change=${(inEvent)=>
+        {
+            inMethods.FormPivotSelect(inEvent.target.selectedIndex-1); 
+            inEvent.target.selectedIndex = 0;
+        }}>
+            <option>Add column</option>
+            ${inModel.Open.map( (inItem, inIndex)=>
+            {
+                return html`<option>${inItem}</option>`
+            })}
+        </select>
+        <button @click=${ ()=>
+        {
+            inMethods.PivotCreate(inModel.Closed);
+            inMethods.FormPivotReset();
+        }}>
+            Create
+        </button>
+        <button @click=${ ()=>
+        {
+            inMethods.FormPivotReset();
+        }}>
+            Cancel
+        </button>
+
     </div>
     `;
 };
@@ -399,4 +460,5 @@ App.Methods.PivotCreate(["Type", "Thing"]);
 */
 var state = {"Data":{"Source":"","Destination":""},"Pivots":[{"Pivot":["Thing","Type"],"Goals":[{"Path":["thing1"],"Column":"Count","Amount":100},{"Path":["thing1","a"],"Column":"Count","Amount":100}],"Edits":[{"Path":["thing1"],"Column":"Cost","Amount":10.31}]},{"Pivot":["Type","Thing"],"Goals":[{"Path":["a"],"Column":"Cost","Amount":100}],"Edits":[{"Path":["a"],"Column":"Cost","Amount":3.33},{"Path":["a","thing1"],"Column":"Cost","Amount":3.33}]}]};
 App.Methods.StateLoad(state);
+App.Methods.FormPivotReset();
 </script>
