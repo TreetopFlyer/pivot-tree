@@ -226,6 +226,22 @@ App.Methods = {
         App.Model.Active = inPivot;
         Render.Update(App.Model, App.Methods);
     },
+    PivotDelete: (inPivot) =>
+    {
+        var i;
+        for(i=0; i<App.Model.Trees.length; i++)
+        {
+            if(App.Model.Trees[i] == inPivot)
+            {
+                if(App.Model.Active == inPivot)
+                {
+                    App.Model.Active = false;
+                }
+                App.Model.Trees.splice(i, 1);
+            }
+        }
+        Render.Update(App.Model, App.Methods);
+    },
     StateSave: () =>
     {
         var i, j;
@@ -319,7 +335,7 @@ Render.Layout = (inModel, inMethods) =>
     </div>
     <div class="Section">
         <h3>View</h3>
-        ${Render.Tree(inModel, inMethods)}
+        ${Render.Table(inModel, inMethods)}
         </table>
     </div>
     `;
@@ -327,7 +343,9 @@ Render.Layout = (inModel, inMethods) =>
 Render.Pivot  = (inModel, inMethods) =>
 {
     return html`
-    <div class="Pivot" @click=${ ()=>{ inMethods.PivotSelect(inModel); } }>
+    <div class="Pivot">
+        <button @click=${ ()=>{ inMethods.PivotDelete(inModel); } }>Delete</button>
+        <button @click=${ ()=>{ inMethods.PivotSelect(inModel); } }>Show</button>
         <div class="Order">
             <h4>Columns</h4>
             ${inModel.Pivot.map( (inItem)=>{
@@ -388,7 +406,7 @@ Render.PivotForm = (inModel, inMethods) =>
     </div>
     `;
 };
-Render.Tree = (inModel, inMethods) =>
+Render.Table = (inModel, inMethods) =>
 {
     if(!inModel.Active)
     {
