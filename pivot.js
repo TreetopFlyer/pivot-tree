@@ -1,17 +1,15 @@
-export const Pivot = (inTable, inColumn) =>
+export const Pivot = (inTable, inColumnIndex) =>
 {
     var i, j;
     var output;
     var row;
     var cell;
-    var column;
     output = [];
 
     rows: for(i=0; i<inTable.Rows.length; i++)
     {
         row = inTable.Rows[i];
-        column = MapColumn(inTable, inColumn);
-        cell = row[column].toString().toLowerCase();
+        cell = row[inColumnIndex].toString().toLowerCase();
         uniques: for(j=0; j<output.length; j++)
         {
             if(cell == output[j].Name)
@@ -57,12 +55,11 @@ export const PivotTree = (inTable, inColumns, inSums, inDepth) =>
 export const SumRows = (inTable, inSums) =>
 {
     var i, j;
-    var column, row;
+    var row;
     inTable.Sums = [];
     for(i=0; i<inSums.length; i++)
     {
         inTable.Sums[i] = {
-            Name:inSums[i],
             Value:0,
             Local:1,
             Parent:1,
@@ -70,26 +67,14 @@ export const SumRows = (inTable, inSums) =>
             Total:0,
             Goal:0
         };
-        column = MapColumn(inTable, inSums[i]);
         for(j=0; j<inTable.Rows.length; j++)
         {
             row = inTable.Rows[j];
-            inTable.Sums[i].Value += row[column];
+            inTable.Sums[i].Value += row[inSums[i]];
         }
     }
 };
 
-export const MapColumn = (inTable, inKey) =>
-{
-    var i;
-    for(i=0; i<inTable.Header.length; i++)
-    {
-        if(inTable.Header[i] == inKey)
-        {
-            return i;
-        }
-    }
-};
 
 export const PathDown = (inTable, inPath, inIndex) =>
 {

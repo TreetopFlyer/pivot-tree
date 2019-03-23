@@ -111,23 +111,7 @@ App.Methods = {
         form.Closed.push(form.Open.splice(inIndex, 1));
         Render.Update(App.Model, App.Methods);
     },
-    ResolvePath: (inPath) =>
-    {
-        return PathDown(App.Model.Active.Root, inPath, 0);
-    },
-    ResolveSum: (inName) =>
-    {
-        var i;
-        var sum;
-        for(i=0; i<App.Model.Sums.length; i++)
-        {
-            if(App.Model.Sums[i] == inName)
-            {
-                return i;
-            }
-        }
-    },
-    ResolvePivot: (inArray) => 
+    InferPivot: (inArray) => 
     {
         var i, j;
         var joiner = "|>-";
@@ -141,6 +125,26 @@ App.Methods = {
             }
         }
         return false;
+    },
+    InferTable: (inArray) =>
+    {
+        return PathDown(App.Model.Active.Root, inArray, 0);
+    },
+    InferColumnIndex: (inName) =>
+    {
+        var i;
+        var sum;
+        for(i=0; i<App.Model.Header.length; i++)
+        {
+            if(App.Model.Header[i] == inName)
+            {
+                return i;
+            }
+        }
+    },
+    InferColumnName: (inIndex) =>
+    {
+        return App.Model.Header[inIndex];
     },
     EditCreate: (inTable, inIndex, inAmount) =>
     {
@@ -172,7 +176,10 @@ App.Methods = {
     {
         var i;
         var root, tree;
-        if(App.Methods.ResolvePivot(inArray))
+        var indiciesSums;
+        var indiciesPivots
+
+        if(App.Methods.InferPivot(inArray))
         {
             App.Model.Active = App.Model.Trees[i];
             Render.Update(App.Model, App.Methods);
@@ -186,12 +193,21 @@ App.Methods = {
             Parent:false,
             Sums:[]
         };
-        PivotTree(root, inArray, App.Model.Sums);
-        SumRows(root, App.Model.Sums);
+        indiciesSums = [];
+        indiciesPivots = [];
+        for(i=0; i<App.Model.Sums.length; i++)
+        {
+            indiciesSums[i] = App.Methods.InferColumnIndex(App.Model.Sums[i]);
+        }
+        for(i=0; i<inArray.length; i++)
+        {
+            indiciesPivots[i] = App.Methods.InferColumnIndex(inArray[i]);
+        }
+        PivotTree(root, indiciesPivots, indiciesSums);
+        SumRows(root, indiciesSums);
         tree = {
             Pivot: inArray,
             Root: root,
-            Nodes: root.Children,
             Goals: [],
             Edits: []
         };
@@ -306,44 +322,12 @@ Render.Layout = (inModel, inMethods) =>
     </div>
     <div class="Section">
         <h3>Pivots</h3>
-        ${inModel.Trees.map( (inItem)=>{
-            return Render.Pivot(inItem, inMethods);
-        })}
         ${Render.PivotForm(inModel.Form.Pivot, inMethods)}
     </div>
     <div class="Section">
         <h3>View</h3>
         ${Render.Table(inModel, inMethods)}
         </table>
-    </div>
-    `;
-};
-Render.Pivot  = (inModel, inMethods) =>
-{
-    return html`
-    <div class="Pivot">
-        <button @click=${ ()=>{ inMethods.PivotDelete(inModel); } }>Delete</button>
-        <button @click=${ ()=>{ inMethods.PivotSelect(inModel); } }>Show</button>
-        <div class="Order">
-            <h4>Columns</h4>
-            ${inModel.Pivot.map( (inItem)=>{
-                return html`<span style="">${inItem}</span>`;
-            })} 
-        </div>
-        <div class="Goals">
-            <h4>Goals</h4>
-            <ul>
-            ${inModel.Goals.map( (inItem)=>{
-                return html`<li>${inItem.Path.join("/")}.${inItem.Sum.Name}: ${inItem.Sum.Goal}</li>`;
-            })} 
-            </ul>
-            <h4>Edits</h4>
-            <ul>
-            ${inModel.Edits.map( (inItem)=>{
-                return html`<li>${inItem.Path.join("/")}.${inItem.Sum.Name}: ${inItem.Sum.Local}</li>`;
-            })} 
-            </ul>
-        </div>
     </div>
     `;
 };
@@ -405,7 +389,7 @@ Render.Table = (inModel, inMethods) =>
             <th class="Goal">-G)</th>`;
         })}
     </tr>
-    ${inModel.Active.Nodes.map( (inBranch)=>{
+    ${inModel.Active.Root.Children.map( (inBranch)=>{
         return Render.Branch(inBranch, inMethods, []);
     })}`;
 };
