@@ -56,11 +56,10 @@ const PivotTree = (inTable, inColumns, inSums, inDepth) =>
     }
 };
 
-const Sum = (inColumnIndex, inSumIndex) =>
+const Sum = (inSumIndex) =>
 {
     return {
-        IndexColumn:inColumnIndex,
-        IndexSum:inSumIndex,
+        Index:inSumIndex,
         Value:0,
         Local:1,
         Parent:1,

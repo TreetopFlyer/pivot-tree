@@ -269,17 +269,17 @@ App = {
                 sum = inTable.Sums[i];
                 if(sum.Local != 1)
                 {
-                    outputColumn.Column = sum.IndexColumn;
+                    outputColumn.Column = i;
                     outputColumn.Edit = sum.Local
                 }
                 if(sum.Goal != 0)
                 {
-                    outputColumn.Column = sum.IndexColumn;
+                    outputColumn.Column = i;
                     outputColumn.Goal = sum.Goal;
                 }
-                if(outputColumn.Column)
+                if(outputColumn.Column > -1)
                 {
-                    outputColumn.Column = App.Methods.MapColumnKey(outputColumn.Column);
+                    outputColumn.Column = App.Methods.MapSumKey(i);
                     outputTable.Columns.push(outputColumn);
                 }
             }
@@ -351,11 +351,11 @@ App = {
                         appColumn = App.Methods.InferColumn(appTable, column.Column);
                         if(column.Edit)
                         {
-                            App.Methods.EditCreate(appTable, appColumn.IndexSum, column.Edit);
+                            App.Methods.EditCreate(appTable, appColumn.Index, column.Edit);
                         }
                         if(column.Goal)
                         {
-                            App.Methods.GoalCreate(appTable, appColumn.IndexSum, column.Goal);
+                            App.Methods.GoalCreate(appTable, appColumn.Index, column.Goal);
                         }
                     }
                 }
