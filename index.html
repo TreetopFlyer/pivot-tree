@@ -111,46 +111,42 @@ App = {
             form.Closed.push(form.Open.splice(inIndex, 1));
             App.Render.Update(App.Model, App.Methods);
         },
-        
-        // used
-        InferPivot: (inArray) => 
+        InferPivot: (inPivots, inArray) => 
         {
             var i, j;
             var joiner = "|>-";
             var tree;
             var check = inArray.join(joiner);
-            for(i=0; i<App.Model.Trees.length; i++)
+            for(i=0; i<inPivots.length; i++)
             {
-                if(check == App.Model.Trees[i].Pivot.join(joiner) )
+                if(check == inPivots[i].Pivot.join(joiner) )
                 {
                     return tree;
                 }
             }
             return false;
         },
-        
-        // unused
-        InferTable: (inArray) =>
+        InferTable: (inPivot, inArray) =>
         {
-            return PathDown(App.Model.Active.Root, inArray, 0);
+            return PathDown(inPivot, inArray, 0);
         },
-        
-        // used
-        InferColumnIndex: (inName) =>
+        InferColumn: (inTable, inKey) =>
+        {
+            return inTable.Sums[App.Methods.MapColumnIndex(inKey)];
+        },
+        MapColumnIndex: (inKey) =>
         {
             var i;
             var sum;
             for(i=0; i<App.Model.Header.length; i++)
             {
-                if(App.Model.Header[i] == inName)
+                if(App.Model.Header[i] == inKey)
                 {
                     return i;
                 }
             }
         },
-        
-        // unused
-        InferColumnName: (inIndex) =>
+        MapColumnKey: (inIndex) =>
         {
             return App.Model.Header[inIndex];
         },
@@ -182,7 +178,7 @@ App = {
             var indiciesSums;
             var indiciesPivots
 
-            if(App.Methods.InferPivot(inArray))
+            if(App.Methods.InferPivot(App.Model.Trees, inArray))
             {
                 App.Model.Active = App.Model.Trees[i];
                 App.Render.Update(App.Model, App.Methods);
@@ -200,11 +196,11 @@ App = {
             indiciesPivots = [];
             for(i=0; i<App.Model.Sums.length; i++)
             {
-                indiciesSums[i] = App.Methods.InferColumnIndex(App.Model.Sums[i]);
+                indiciesSums[i] = App.Methods.MapColumnIndex(App.Model.Sums[i]);
             }
             for(i=0; i<inArray.length; i++)
             {
-                indiciesPivots[i] = App.Methods.InferColumnIndex(inArray[i]);
+                indiciesPivots[i] = App.Methods.MapColumnIndex(inArray[i]);
             }
             Pivot(root, indiciesPivots, indiciesSums);
             tree = {
