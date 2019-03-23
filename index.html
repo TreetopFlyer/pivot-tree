@@ -65,372 +65,364 @@ td.Goal
 <div id="App"></div>
 <script type="module">
 import { html, render } from 'https://unpkg.com/lit-html/lit-html.js';
-import { Pivot, PivotTree, SumRows, TweakUp, TweakDown, PathDown } from './pivot.js';
+import { Pivot, Tweak, PathDown } from './pivot.js';
 
 var App;
-App = {}
-App.Model = {
-    Header: ["Thing", "Type", "Cost", "Count"],
-    Sums:   [                 "Cost", "Count"],
-    Pivot:  ["Thing", "Type",                ],
-    Rows:   [
-            ["thing1", "a",    1,      1     ],
-            ["thing1", "b",    2,      1     ],
-            ["thing1", "a",    3,      2     ],
-            ["thing1", "b",    4,      2     ],
-            ["thing2", "a",    1,      2     ],
-            ["thing2", "b",    2,      2     ],
-            ["thing2", "a",    3,      2     ],
-            ["thing2", "b",    4,      2     ],
-            ["thing2", "a",    5,      1     ],
-            ["thing2", "b",    6,      1     ],
-            ["thing2", "a",    7,      1     ]
-            ],
-    Trees:  [],
-    Active:false,
-    Form:{
-        Pivot:{
-            Open:[],
-            Closed:[]
-        }
-    }
-};
-App.Methods = {
-    FormPivotReset: () =>
-    {
-        var form;
-        form = App.Model.Form.Pivot;
-        form.Open = App.Model.Pivot.slice();
-        form.Closed = [];
-        App.Render.Update(App.Model, App.Methods);
-    },
-    FormPivotSelect: (inIndex) =>
-    {
-        var form;
-        form = App.Model.Form.Pivot;
-        form.Closed.push(form.Open.splice(inIndex, 1));
-        App.Render.Update(App.Model, App.Methods);
-    },
-    InferPivot: (inArray) => 
-    {
-        var i, j;
-        var joiner = "|>-";
-        var tree;
-        var check = inArray.join(joiner);
-        for(i=0; i<App.Model.Trees.length; i++)
-        {
-            if(check == App.Model.Trees[i].Pivot.join(joiner) )
-            {
-                return tree;
-            }
-        }
-        return false;
-    },
-    InferTable: (inArray) =>
-    {
-        return PathDown(App.Model.Active.Root, inArray, 0);
-    },
-    InferColumnIndex: (inName) =>
-    {
-        var i;
-        var sum;
-        for(i=0; i<App.Model.Header.length; i++)
-        {
-            if(App.Model.Header[i] == inName)
-            {
-                return i;
+App = {
+    Model: {
+        Header: ["Thing", "Type", "Cost", "Count"],
+        Sums:   [                 "Cost", "Count"],
+        Pivot:  ["Thing", "Type",                ],
+        Rows:   [
+                ["thing1", "a",    1,      1     ],
+                ["thing1", "b",    2,      1     ],
+                ["thing1", "a",    3,      2     ],
+                ["thing1", "b",    4,      2     ],
+                ["thing2", "a",    1,      2     ],
+                ["thing2", "b",    2,      2     ],
+                ["thing2", "a",    3,      2     ],
+                ["thing2", "b",    4,      2     ],
+                ["thing2", "a",    5,      1     ],
+                ["thing2", "b",    6,      1     ],
+                ["thing2", "a",    7,      1     ]
+                ],
+        Trees:  [],
+        Active:false,
+        Form:{
+            Pivot:{
+                Open:[],
+                Closed:[]
             }
         }
     },
-    InferColumnName: (inIndex) =>
-    {
-        return App.Model.Header[inIndex];
-    },
-    EditCreate: (inTable, inIndex, inAmount) =>
-    {
-        var column;
-        var adjust;
-        column = inTable.Sums[inIndex];
-        column.Local = inAmount;
-        adjust = (column.Value*column.Local) - (column.Value);
-        TweakUp(inTable, inIndex, adjust);
-        TweakDown(inTable, inIndex);
-        App.Render.Update(App.Model, App.Methods);
-    },
-    EditDelete: (inTable, inIndex)=>
-    {
-        App.Methods.EditCreate(inTable, inIndex, 1);
-    },
-    GoalCreate: (inTable, inIndex, inAmount) =>
-    {
-        var column;
-        column = inTable.Sums[inIndex];
-        column.Goal = inAmount;
-        App.Render.Update(App.Model, App.Methods);
-    },
-    GoalDelete: (inTable, inIndex) =>
-    {
-        App.Methods.GoalCreate(inTable, inIndex, 0);
-    },
-    PivotCreate: (inArray) =>
-    {
-        var i;
-        var root, tree;
-        var indiciesSums;
-        var indiciesPivots
-
-        if(App.Methods.InferPivot(inArray))
+    Methods: {
+        FormPivotReset: () =>
         {
-            App.Model.Active = App.Model.Trees[i];
+            var form;
+            form = App.Model.Form.Pivot;
+            form.Open = App.Model.Pivot.slice();
+            form.Closed = [];
             App.Render.Update(App.Model, App.Methods);
-            return;
-        }
-
-        root = {
-            Name:"Root",
-            Header:App.Model.Header,
-            Rows:App.Model.Rows,
-            Parent:false,
-            Sums:[]
-        };
-        indiciesSums = [];
-        indiciesPivots = [];
-        for(i=0; i<App.Model.Sums.length; i++)
+        },
+        FormPivotSelect: (inIndex) =>
         {
-            indiciesSums[i] = App.Methods.InferColumnIndex(App.Model.Sums[i]);
-        }
-        for(i=0; i<inArray.length; i++)
+            var form;
+            form = App.Model.Form.Pivot;
+            form.Closed.push(form.Open.splice(inIndex, 1));
+            App.Render.Update(App.Model, App.Methods);
+        },
+        InferPivot: (inArray) => 
         {
-            indiciesPivots[i] = App.Methods.InferColumnIndex(inArray[i]);
-        }
-        PivotTree(root, indiciesPivots, indiciesSums);
-        SumRows(root, indiciesSums);
-        tree = {
-            Pivot: inArray,
-            Root: root,
-            Goals: [],
-            Edits: []
-        };
-        App.Model.Trees.push(tree);
-        App.Model.Active = tree;
-        App.Render.Update(App.Model, App.Methods);
-    },
-    PivotSelect: (inPivot)=>
-    {
-        App.Model.Active = inPivot;
-        App.Render.Update(App.Model, App.Methods);
-    },
-    PivotDelete: (inPivot) =>
-    {
-        var i;
-        for(i=0; i<App.Model.Trees.length; i++)
-        {
-            if(App.Model.Trees[i] == inPivot)
+            var i, j;
+            var joiner = "|>-";
+            var tree;
+            var check = inArray.join(joiner);
+            for(i=0; i<App.Model.Trees.length; i++)
             {
-                if(App.Model.Active == inPivot)
+                if(check == App.Model.Trees[i].Pivot.join(joiner) )
                 {
-                    App.Model.Active = false;
+                    return tree;
                 }
-                App.Model.Trees.splice(i, 1);
             }
-        }
-        App.Render.Update(App.Model, App.Methods);
-    },
-    StateSave: () =>
-    {
-        var i, j;
-        var output;
-        var pivot;
-        var tree;
-        var record;
-        var item;
-
-        output = {
-            Data:{
-                Source:"",
-                Destination:"",
-            },
-            Pivots:[]
-        };
-
-        for(i=0; i<App.Model.Trees.length; i++)
-        {
-            pivot = {
-                Pivot:[],
-                Goals:[],
-                Edits:[]
-            };
-            output.Pivots.push(pivot);
-            tree = App.Model.Trees[i];
-            pivot.Pivot = tree.Pivot;
-            for(j=0; j<tree.Edits.length; j++)
-            {
-                item = tree.Edits[j];
-                pivot.Edits.push({
-                    Path: item.Path,
-                    Column: item.Sum.Name,
-                    Amount: item.Sum.Local
-                });
-            }
-            for(j=0; j<tree.Goals.length; j++)
-            {
-                item = tree.Goals[j];
-                pivot.Goals.push({
-                    Path: item.Path,
-                    Column: item.Sum.Name,
-                    Amount: item.Sum.Goal
-                });
-            }
-        }
-        console.log(JSON.stringify(output));
-        return output;
-    },
-    StateLoad: (inState) => 
-    {
-        var i, j;
-        var pivot;
-        var item;
-        for(i=0; i<inState.Pivots.length; i++)
-        {
-            pivot = inState.Pivots[i];
-            App.Methods.PivotCreate(pivot.Pivot);
-            for(j=0; j<pivot.Edits.length; j++)
-            {
-                item = pivot.Edits[j];
-                App.Methods.EditCreate(item.Path, item.Column, item.Amount);
-            }
-            for(j=0; j<pivot.Goals.length; j++)
-            {
-                item = pivot.Goals[j];
-                App.Methods.GoalCreate(item.Path, item.Column, item.Amount);
-            }
-        }
-    }
-};
-
-App.Render = {
-    Update: (inModel, inMethods) =>
-    {
-        render( App.Render.Layout(inModel, inMethods), document.querySelector("#App"));
-    },
-    Layout: (inModel, inMethods) =>
-    {
-        return html`
-        <div class="Section">
-            <h3>State</h3>
-            <button @click=${ ()=>{inMethods.StateSave();} }>Save</button>
-        </div>
-        <div class="Section">
-            <h3>Pivots</h3>
-            ${App.Render.FormPivot(inModel.Form.Pivot, inMethods)}
-        </div>
-        <div class="Section">
-            <h3>View</h3>
-            ${App.Render.Tree(inModel, inMethods)}
-            </table>
-        </div>
-        `;
-    },
-    FormPivot: (inModel, inMethods) =>
-    {
-        return html`
-        <div>
-            <ul>
-                ${inModel.Closed.map( (inItem, inIndex)=>{
-                    return html`<li>${inItem}</li>`
-                })}
-            </ul>
-            <select @change=${(inEvent)=>
-            {
-                inMethods.FormPivotSelect(inEvent.target.selectedIndex-1); 
-                inEvent.target.selectedIndex = 0;
-            }}>
-                <option>Add column</option>
-                ${inModel.Open.map( (inItem, inIndex)=>
-                {
-                    return html`<option>${inItem}</option>`
-                })}
-            </select>
-            <button @click=${ ()=>
-            {
-                inMethods.PivotCreate(inModel.Closed);
-                inMethods.FormPivotReset();
-            }}>
-                Create
-            </button>
-            <button @click=${ ()=>
-            {
-                inMethods.FormPivotReset();
-            }}>
-                Cancel
-            </button>
-
-        </div>
-        `;
-    },
-    Tree: (inModel, inMethods) =>
-    {
-        if(!inModel.Active)
-        {
             return false;
-        }
-        return html`
-        <table cellpadding="0" cellspacing="0">
-        <tr>
-            <th class="Column"></th>
-            ${inModel.Sums.map( (inItem)=>
+        },
+        InferTable: (inArray) =>
+        {
+            return PathDown(App.Model.Active.Root, inArray, 0);
+        },
+        InferColumnIndex: (inName) =>
+        {
+            var i;
+            var sum;
+            for(i=0; i<App.Model.Header.length; i++)
             {
-                return html`
-                <th class="Value">${inItem}</th>
-                <th class="Local">(xL</th>
-                <th class="Parent">xP</th>
-                <th class="Child">+C</th>
-                <th class="Total">=T</th>
-                <th class="Goal">-G)</th>`;
-            })}
-        </tr>
-        ${inModel.Active.Root.Children.map( (inBranch)=>{
-            return App.Render.Branch(inBranch, inMethods, []);
-        })}`;
+                if(App.Model.Header[i] == inName)
+                {
+                    return i;
+                }
+            }
+        },
+        InferColumnName: (inIndex) =>
+        {
+            return App.Model.Header[inIndex];
+        },
+        EditCreate: (inTable, inIndex, inAmount) =>
+        {
+            Tweak(inTable, inIndex, inAmount)
+            App.Render.Update(App.Model, App.Methods);
+        },
+        EditDelete: (inTable, inIndex)=>
+        {
+            Tweak(inTable, inIndex, 0)
+            App.Render.Update(App.Model, App.Methods);
+        },
+        GoalCreate: (inTable, inIndex, inAmount) =>
+        {
+            var column;
+            column = inTable.Sums[inIndex];
+            column.Goal = inAmount;
+            App.Render.Update(App.Model, App.Methods);
+        },
+        GoalDelete: (inTable, inIndex) =>
+        {
+            App.Methods.GoalCreate(inTable, inIndex, 0);
+        },
+        PivotCreate: (inArray) =>
+        {
+            var i;
+            var root, tree;
+            var indiciesSums;
+            var indiciesPivots
+
+            if(App.Methods.InferPivot(inArray))
+            {
+                App.Model.Active = App.Model.Trees[i];
+                App.Render.Update(App.Model, App.Methods);
+                return;
+            }
+
+            root = {
+                Name:"Root",
+                Header:App.Model.Header,
+                Rows:App.Model.Rows,
+                Parent:false,
+                Sums:[]
+            };
+            indiciesSums = [];
+            indiciesPivots = [];
+            for(i=0; i<App.Model.Sums.length; i++)
+            {
+                indiciesSums[i] = App.Methods.InferColumnIndex(App.Model.Sums[i]);
+            }
+            for(i=0; i<inArray.length; i++)
+            {
+                indiciesPivots[i] = App.Methods.InferColumnIndex(inArray[i]);
+            }
+            Pivot(root, indiciesPivots, indiciesSums);
+            tree = {
+                Pivot: inArray,
+                Root: root
+            };
+            App.Model.Trees.push(tree);
+            App.Model.Active = tree;
+            App.Render.Update(App.Model, App.Methods);
+        },
+        PivotSelect: (inPivot)=>
+        {
+            App.Model.Active = inPivot;
+            App.Render.Update(App.Model, App.Methods);
+        },
+        PivotDelete: (inPivot) =>
+        {
+            var i;
+            for(i=0; i<App.Model.Trees.length; i++)
+            {
+                if(App.Model.Trees[i] == inPivot)
+                {
+                    if(App.Model.Active == inPivot)
+                    {
+                        App.Model.Active = false;
+                    }
+                    App.Model.Trees.splice(i, 1);
+                }
+            }
+            App.Render.Update(App.Model, App.Methods);
+        },
+        StateSave: () =>
+        {
+            var i, j;
+            var output;
+            var pivot;
+            var tree;
+            var record;
+            var item;
+
+            output = {
+                Data:{
+                    Source:"",
+                    Destination:"",
+                },
+                Pivots:[]
+            };
+
+            for(i=0; i<App.Model.Trees.length; i++)
+            {
+                pivot = {
+                    Pivot:[],
+                    Goals:[],
+                    Edits:[]
+                };
+                output.Pivots.push(pivot);
+                tree = App.Model.Trees[i];
+                pivot.Pivot = tree.Pivot;
+                for(j=0; j<tree.Edits.length; j++)
+                {
+                    item = tree.Edits[j];
+                    pivot.Edits.push({
+                        Path: item.Path,
+                        Column: item.Sum.Name,
+                        Amount: item.Sum.Local
+                    });
+                }
+                for(j=0; j<tree.Goals.length; j++)
+                {
+                    item = tree.Goals[j];
+                    pivot.Goals.push({
+                        Path: item.Path,
+                        Column: item.Sum.Name,
+                        Amount: item.Sum.Goal
+                    });
+                }
+            }
+            console.log(JSON.stringify(output));
+            return output;
+        },
+        StateLoad: (inState) => 
+        {
+            var i, j;
+            var pivot;
+            var item;
+            for(i=0; i<inState.Pivots.length; i++)
+            {
+                pivot = inState.Pivots[i];
+                App.Methods.PivotCreate(pivot.Pivot);
+                for(j=0; j<pivot.Edits.length; j++)
+                {
+                    item = pivot.Edits[j];
+                    App.Methods.EditCreate(item.Path, item.Column, item.Amount);
+                }
+                for(j=0; j<pivot.Goals.length; j++)
+                {
+                    item = pivot.Goals[j];
+                    App.Methods.GoalCreate(item.Path, item.Column, item.Amount);
+                }
+            }
+        }
     },
-    Branch: (inModel, inMethods, inPath) =>
-    {
-        var path = inPath.concat([inModel.Name]);
-        return html`
-        <tr>
-            <td>
-                ${path.join("/")}
-            </td>
-            ${inModel.Sums.map( (inItem, inIndex)=>{
-
-                var total;
-                var markupGoal;
-                total = inItem.Value * inItem.Local * inItem.Parent + inItem.Child;
-                if(inItem.Goal)
+    Render: {
+        Update: (inModel, inMethods) =>
+        {
+            render( App.Render.Layout(inModel, inMethods), document.querySelector("#App"));
+        },
+        Layout: (inModel, inMethods) =>
+        {
+            return html`
+            <div class="Section">
+                <h3>State</h3>
+                <button @click=${ ()=>{inMethods.StateSave();} }>Save</button>
+            </div>
+            <div class="Section">
+                <h3>Pivots</h3>
+                ${App.Render.FormPivot(inModel.Form.Pivot, inMethods)}
+            </div>
+            <div class="Section">
+                <h3>View</h3>
+                ${App.Render.Tree(inModel, inMethods)}
+                </table>
+            </div>
+            `;
+        },
+        FormPivot: (inModel, inMethods) =>
+        {
+            return html`
+            <div>
+                <ul>
+                    ${inModel.Closed.map( (inItem, inIndex)=>{
+                        return html`<li>${inItem}</li>`
+                    })}
+                </ul>
+                <select @change=${(inEvent)=>
                 {
-                    markupGoal = html`${inItem.Goal}`;
-                }
-                else
+                    inMethods.FormPivotSelect(inEvent.target.selectedIndex-1); 
+                    inEvent.target.selectedIndex = 0;
+                }}>
+                    <option>Add column</option>
+                    ${inModel.Open.map( (inItem, inIndex)=>
+                    {
+                        return html`<option>${inItem}</option>`
+                    })}
+                </select>
+                <button @click=${ ()=>
                 {
-                    markupGoal = html`<button @click=${()=>{inMethods.GoalCreate(inModel, inIndex, 100)} }>+</button>`;
-                }
+                    inMethods.PivotCreate(inModel.Closed);
+                    inMethods.FormPivotReset();
+                }}>
+                    Create
+                </button>
+                <button @click=${ ()=>
+                {
+                    inMethods.FormPivotReset();
+                }}>
+                    Cancel
+                </button>
 
-                return html`
-                <td class="Value" @click=${ ()=>{inMethods.EditCreate(inModel, inIndex, 1.33);} }>
-                    ${inItem.Value.toFixed(2)}
+            </div>
+            `;
+        },
+        Tree: (inModel, inMethods) =>
+        {
+            if(!inModel.Active)
+            {
+                return false;
+            }
+            return html`
+            <table cellpadding="0" cellspacing="0">
+            <tr>
+                <th class="Column"></th>
+                ${inModel.Sums.map( (inItem)=>
+                {
+                    return html`
+                    <th class="Value">${inItem}</th>
+                    <th class="Local">(xL</th>
+                    <th class="Parent">xP</th>
+                    <th class="Child">+C</th>
+                    <th class="Total">=T</th>
+                    <th class="Goal">-G)</th>`;
+                })}
+            </tr>
+            ${inModel.Active.Root.Children.map( (inBranch)=>{
+                return App.Render.Branch(inBranch, inMethods, []);
+            })}`;
+        },
+        Branch: (inModel, inMethods, inPath) =>
+        {
+            var path = inPath.concat([inModel.Name]);
+            return html`
+            <tr>
+                <td>
+                    ${path.join("/")}
                 </td>
-                <td class="Local">${inItem.Local}</td>
-                <td class="Parent">${inItem.Parent}</td>
-                <td class="Child">${inItem.Child}</td>
-                <td class="Total">${total.toFixed(2)}</td>
-                <td class="Goal">${markupGoal}</td>
-                `;
+                ${inModel.Sums.map( (inItem, inIndex)=>{
+
+                    var total;
+                    var markupGoal;
+                    total = inItem.Value * inItem.Local * inItem.Parent + inItem.Child;
+                    if(inItem.Goal != 0)
+                    {
+                        markupGoal = html`${inItem.Goal}`;
+                    }
+                    else
+                    {
+                        markupGoal = html`<button @click=${()=>{inMethods.GoalCreate(inModel, inIndex, 100)} }>+</button>`;
+                    }
+
+                    return html`
+                    <td class="Value" @click=${ ()=>{inMethods.EditCreate(inModel, inIndex, 1.33);} }>
+                        ${inItem.Value.toFixed(2)}
+                    </td>
+                    <td class="Local">${inItem.Local}</td>
+                    <td class="Parent">${inItem.Parent}</td>
+                    <td class="Child">${inItem.Child}</td>
+                    <td class="Total">${total.toFixed(2)}</td>
+                    <td class="Goal">${markupGoal}</td>
+                    `;
+                } )}
+            </tr>
+            ${inModel.Children.map( (inItem)=>{
+                return App.Render.Branch(inItem, inMethods, path);
             } )}
-        </tr>
-        ${inModel.Children.map( (inItem)=>{
-            return App.Render.Branch(inItem, inMethods, path);
-        } )}
-        `;
+            `;
+        }
     }
 };
 

@@ -1,4 +1,9 @@
-export const Pivot = (inTable, inColumnIndex) =>
+export const Pivot = (inTable, inIndiciesPivots, inIndiciesSums) =>
+{
+    PivotTree(inTable, inIndiciesPivots, inIndiciesSums);
+    SumRows(inTable, inIndiciesSums);
+}
+const PivotTable = (inTable, inColumnIndex) =>
 {
     var i, j;
     var output;
@@ -28,12 +33,11 @@ export const Pivot = (inTable, inColumnIndex) =>
     }
     return output;
 };
-
-export const PivotTree = (inTable, inColumns, inSums, inDepth) =>
+const PivotTree = (inTable, inColumns, inSums, inDepth) =>
 {
     var i;
     var depth = inDepth||0;
-    inTable.Children = Pivot(inTable, inColumns[depth]);
+    inTable.Children = PivotTable(inTable, inColumns[depth]);
     depth++;
     if(depth == inColumns.length)
     {
@@ -52,21 +56,25 @@ export const PivotTree = (inTable, inColumns, inSums, inDepth) =>
     }
 };
 
-export const SumRows = (inTable, inSums) =>
+const Sum = () =>
+{
+    return {
+        Value:0,
+        Local:1,
+        Parent:1,
+        Child:0,
+        Total:0,
+        Goal:0
+    };
+}
+const SumRows = (inTable, inSums) =>
 {
     var i, j;
     var row;
     inTable.Sums = [];
     for(i=0; i<inSums.length; i++)
     {
-        inTable.Sums[i] = {
-            Value:0,
-            Local:1,
-            Parent:1,
-            Child:0,
-            Total:0,
-            Goal:0
-        };
+        inTable.Sums[i] = Sum();
         for(j=0; j<inTable.Rows.length; j++)
         {
             row = inTable.Rows[j];
@@ -75,6 +83,37 @@ export const SumRows = (inTable, inSums) =>
     }
 };
 
+export const Tweak = (inTable, inColumnIndex, inAmount) =>
+{
+    var column;
+    var adjust;
+    column = inTable.Sums[inColumnIndex];
+    column.Local = inAmount;
+    adjust = (column.Value*column.Local) - (column.Value);
+    TweakUp(inTable, inColumnIndex, adjust);
+    TweakDown(inTable, inColumnIndex);
+}
+const TweakUp = (inTable, inColumn, inAmount) =>
+{
+    if(inTable.Parent)
+    {
+        inTable.Parent.Sums[inColumn].Child += inAmount;
+        TweakUp(inTable.Parent, inColumn, inAmount);
+    }
+};
+const TweakDown = (inTable, inColumn) =>
+{
+    var i;
+    var parentColumn;
+    var parentScalar;
+    parentColumn = inTable.Sums[inColumn];
+    parentScalar = parentColumn.Local * parentColumn.Parent;
+    for(i=0; i<inTable.Children.length; i++)
+    {
+        inTable.Children[i].Sums[inColumn].Parent = parentScalar;
+        TweakDown(inTable.Children[i], inColumn, parentScalar);
+    }
+};
 
 export const PathDown = (inTable, inPath, inIndex) =>
 {
@@ -100,28 +139,5 @@ export const PathDown = (inTable, inPath, inIndex) =>
         }
     }
     return false;
-};
-
-export const TweakUp = (inTable, inColumn, inAmount) =>
-{
-    if(inTable.Parent)
-    {
-        inTable.Parent.Sums[inColumn].Child += inAmount;
-        TweakUp(inTable.Parent, inColumn, inAmount);
-    }
-};
-
-export const TweakDown = (inTable, inColumn) =>
-{
-    var i;
-    var parentColumn;
-    var parentScalar;
-    parentColumn = inTable.Sums[inColumn];
-    parentScalar = parentColumn.Local * parentColumn.Parent;
-    for(i=0; i<inTable.Children.length; i++)
-    {
-        inTable.Children[i].Sums[inColumn].Parent = parentScalar;
-        TweakDown(inTable.Children[i], inColumn, parentScalar);
-    }
 };
 
