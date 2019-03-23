@@ -93,7 +93,8 @@ App = {
                 Open:[],
                 Closed:[]
             }
-        }
+        },
+        History:[]
     },
     Methods: {
         FormPivotReset: () =>
@@ -111,24 +112,24 @@ App = {
             form.Closed.push(form.Open.splice(inIndex, 1));
             App.Render.Update(App.Model, App.Methods);
         },
-        InferPivot: (inPivots, inArray) => 
+        InferPivot: (inTrees, inArray) => 
         {
             var i, j;
             var joiner = "|>-";
             var tree;
             var check = inArray.join(joiner);
-            for(i=0; i<inPivots.length; i++)
+            for(i=0; i<inTrees.length; i++)
             {
-                if(check == inPivots[i].Pivot.join(joiner) )
+                if(check == inTrees[i].Pivot.join(joiner) )
                 {
                     return tree;
                 }
             }
             return false;
         },
-        InferTable: (inPivot, inArray) =>
+        InferTable: (inTree, inArray) =>
         {
-            return PathDown(inPivot, inArray, 0);
+            return PathDown(inTree.Root, inArray, 0);
         },
         InferColumn: (inTable, inKey) =>
         {
@@ -150,6 +151,7 @@ App = {
         {
             return App.Model.Header[inIndex];
         },
+
         EditCreate: (inTable, inIndex, inAmount) =>
         {
             Tweak(inTable, inIndex, inAmount)
@@ -210,6 +212,7 @@ App = {
             App.Model.Trees.push(tree);
             App.Model.Active = tree;
             App.Render.Update(App.Model, App.Methods);
+            return tree;
         },
         PivotSelect: (inPivot)=>
         {
@@ -249,23 +252,24 @@ App = {
                 sum = inTable.Sums[i];
                 if(sum.Local != 1)
                 {
-                    outputColumn.Path = sum.Column;
+                    outputColumn.Column = sum.IndexColumn;
                     outputColumn.Edit = sum.Local
                 }
                 if(sum.Goal != 0)
                 {
-                    outputColumn.Path = sum.Column;
+                    outputColumn.Column = sum.IndexColumn;
                     outputColumn.Goal = sum.Goal;
                 }
-                if(outputColumn.Path)
+                if(outputColumn.Column)
                 {
-                    outputColumn.Path = App.Methods.MapColumnKey(outputColumn.Path);
+                    outputColumn.Column = App.Methods.MapColumnKey(outputColumn.Column);
                     outputTable.Columns.push(outputColumn);
                 }
             }
             if(outputTable.Columns.length != 0)
             {
                 outputTable.Path = PathUp(inTable, []);
+                outputTable.Path.shift();
                 inList.push(outputTable);
             }
             for(i=0; i<inTable.Children.length; i++)
@@ -276,12 +280,10 @@ App = {
         },
         StateSave: () =>
         {
-            var i, j;
+            var i;
             var output;
             var pivot;
             var tree;
-            var record;
-            var item;
 
             output = {
                 Data:{
@@ -301,26 +303,45 @@ App = {
                 output.Pivots.push(pivot);
             }
             console.log(output);
+            App.Model.History.unshift(output);
+            App.Render.Update(App.Model, App.Methods);
             return output;
         },
         StateLoad: (inState) => 
         {
-            var i, j;
-            var pivot;
-            var item;
+            var i, j, k;
+            var tree;
+            var table;
+            var column;
+            var appTree;
+            var appTable;
+            var appColumn;
+
+            App.Model.Trees = [];
+            App.Model.Active = false;
+
             for(i=0; i<inState.Pivots.length; i++)
             {
-                pivot = inState.Pivots[i];
-                App.Methods.PivotCreate(pivot.Pivot);
-                for(j=0; j<pivot.Edits.length; j++)
+                tree = inState.Pivots[i];
+                appTree = App.Methods.PivotCreate(tree.Pivot);
+                for(j=0; j<tree.Changes.length; j++)
                 {
-                    item = pivot.Edits[j];
-                    App.Methods.EditCreate(item.Path, item.Column, item.Amount);
-                }
-                for(j=0; j<pivot.Goals.length; j++)
-                {
-                    item = pivot.Goals[j];
-                    App.Methods.GoalCreate(item.Path, item.Column, item.Amount);
+                    table = tree.Changes[j];
+                    appTable = App.Methods.InferTable(appTree, table.Path);
+
+                    for(k=0; k<table.Columns.length; k++)
+                    {
+                        column = table.Columns[k];
+                        appColumn = App.Methods.InferColumn(appTable, column.Column);
+                        if(appColumn.Edit)
+                        {
+                            AppMethods.EditCreate(appTable, column.IndexSum);
+                        }
+                        if(appColumn.Goal)
+                        {
+                            AppMethods.GoalCreate(appTable, column.IndexSum);
+                        }
+                    }
                 }
             }
         }
@@ -337,6 +358,9 @@ App = {
             <div class="Section">
                 <h3>State</h3>
                 <button @click=${ ()=>{inMethods.StateSave();} }>Save</button>
+                ${inModel.History.map( (inItem, inIndex)=>{
+                    return html`<button @click=${ ()=>{inMethods.StateLoad(inModel.History[inIndex]);} }>${inIndex}</button>`;
+                } )}
             </div>
             <div class="Section">
                 <h3>Pivots</h3>

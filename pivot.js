@@ -56,10 +56,11 @@ const PivotTree = (inTable, inColumns, inSums, inDepth) =>
     }
 };
 
-const Sum = (inColumnIndex) =>
+const Sum = (inColumnIndex, inSumIndex) =>
 {
     return {
-        Column:inColumnIndex,
+        IndexColumn:inColumnIndex,
+        IndexSum:inSumIndex,
         Value:0,
         Local:1,
         Parent:1,
@@ -75,7 +76,7 @@ const SumRows = (inTable, inSums) =>
     inTable.Sums = [];
     for(i=0; i<inSums.length; i++)
     {
-        inTable.Sums[i] = Sum(inSums[i]);
+        inTable.Sums[i] = Sum(inSums[i], inTable.Sums.length);
         for(j=0; j<inTable.Rows.length; j++)
         {
             row = inTable.Rows[j];
