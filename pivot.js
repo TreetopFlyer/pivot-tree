@@ -115,29 +115,40 @@ const TweakDown = (inTable, inColumn) =>
     }
 };
 
-export const PathDown = (inTable, inPath, inIndex) =>
+export const PathDown = (inTable, inPath) =>
 {
     var i;
     var child;
     var lookup;
 
-    lookup = inPath[inIndex];
+    lookup = inPath.shift();
     for(i=0; i<inTable.Children.length; i++)
     {
         child = inTable.Children[i];
         if(child.Name === lookup)
         {
-            if(inPath.length-1 == inIndex)
+            if(inPath.length == 0)
             {
                 return child;
             }
             else
             {
-                return PathDown(child, inPath, inIndex+1);
+                return PathDown(child, inPath);
             }
             break;
         }
     }
     return false;
 };
-
+export const PathUp = (inTable, inPath) =>
+{
+    inPath.push(inTable.Name);
+    if(inTable.Parent)
+    {
+        return PathUp(inTable.Parent, inPath);
+    }
+    else
+    {
+        return inPath;
+    }
+};

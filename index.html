@@ -65,7 +65,7 @@ td.Goal
 <div id="App"></div>
 <script type="module">
 import { html, render } from 'https://unpkg.com/lit-html/lit-html.js';
-import { Pivot, Tweak, PathDown } from './pivot.js';
+import { Pivot, Tweak, PathDown, PathUp } from './pivot.js';
 
 var App;
 App = {
@@ -111,6 +111,8 @@ App = {
             form.Closed.push(form.Open.splice(inIndex, 1));
             App.Render.Update(App.Model, App.Methods);
         },
+        
+        // used
         InferPivot: (inArray) => 
         {
             var i, j;
@@ -126,10 +128,14 @@ App = {
             }
             return false;
         },
+        
+        // unused
         InferTable: (inArray) =>
         {
             return PathDown(App.Model.Active.Root, inArray, 0);
         },
+        
+        // used
         InferColumnIndex: (inName) =>
         {
             var i;
@@ -142,6 +148,8 @@ App = {
                 }
             }
         },
+        
+        // unused
         InferColumnName: (inIndex) =>
         {
             return App.Model.Header[inIndex];
@@ -302,6 +310,7 @@ App = {
     Render: {
         Update: (inModel, inMethods) =>
         {
+            console.log(inModel);
             render( App.Render.Layout(inModel, inMethods), document.querySelector("#App"));
         },
         Layout: (inModel, inMethods) =>
@@ -318,7 +327,6 @@ App = {
             <div class="Section">
                 <h3>View</h3>
                 ${App.Render.Tree(inModel, inMethods)}
-                </table>
             </div>
             `;
         },
@@ -367,22 +375,24 @@ App = {
             }
             return html`
             <table cellpadding="0" cellspacing="0">
-            <tr>
-                <th class="Column"></th>
-                ${inModel.Sums.map( (inItem)=>
-                {
-                    return html`
-                    <th class="Value">${inItem}</th>
-                    <th class="Local">(xL</th>
-                    <th class="Parent">xP</th>
-                    <th class="Child">+C</th>
-                    <th class="Total">=T</th>
-                    <th class="Goal">-G)</th>`;
+                <tr>
+                    <th class="Column"></th>
+                    ${inModel.Sums.map( (inItem)=>
+                    {
+                        return html`
+                        <th class="Value">${inItem}</th>
+                        <th class="Local">(xL</th>
+                        <th class="Parent">xP</th>
+                        <th class="Child">+C</th>
+                        <th class="Total">=T</th>
+                        <th class="Goal">-G)</th>`;
+                    })}
+                </tr>
+                ${inModel.Active.Root.Children.map( (inBranch)=>{
+                    return App.Render.Branch(inBranch, inMethods, []);
                 })}
-            </tr>
-            ${inModel.Active.Root.Children.map( (inBranch)=>{
-                return App.Render.Branch(inBranch, inMethods, []);
-            })}`;
+            </table>
+            `;
         },
         Branch: (inModel, inMethods, inPath) =>
         {
