@@ -232,6 +232,48 @@ App = {
             }
             App.Render.Update(App.Model, App.Methods);
         },
+        StatePivot: (inTable, inList) =>
+        {
+            var i;
+            var sum;
+            var outputTable;
+            var outputColumn;
+
+            outputTable = {
+                Path:[],
+                Columns:[]
+            };
+            for(i=0; i<inTable.Sums.length; i++)
+            {
+                outputColumn = {};
+                sum = inTable.Sums[i];
+                if(sum.Local != 1)
+                {
+                    outputColumn.Path = sum.Column;
+                    outputColumn.Edit = sum.Local
+                }
+                if(sum.Goal != 0)
+                {
+                    outputColumn.Path = sum.Column;
+                    outputColumn.Goal = sum.Goal;
+                }
+                if(outputColumn.Path)
+                {
+                    outputColumn.Path = App.Methods.MapColumnKey(outputColumn.Path);
+                    outputTable.Columns.push(outputColumn);
+                }
+            }
+            if(outputTable.Columns.length != 0)
+            {
+                outputTable.Path = PathUp(inTable, []);
+                inList.push(outputTable);
+            }
+            for(i=0; i<inTable.Children.length; i++)
+            {
+                App.Methods.StatePivot(inTable.Children[i], inList);
+            }
+            return inList;
+        },
         StateSave: () =>
         {
             var i, j;
@@ -251,34 +293,14 @@ App = {
 
             for(i=0; i<App.Model.Trees.length; i++)
             {
+                tree = App.Model.Trees[i];
                 pivot = {
-                    Pivot:[],
-                    Goals:[],
-                    Edits:[]
+                    Pivot:tree.Pivot,
+                    Changes:App.Methods.StatePivot(tree.Root, []),
                 };
                 output.Pivots.push(pivot);
-                tree = App.Model.Trees[i];
-                pivot.Pivot = tree.Pivot;
-                for(j=0; j<tree.Edits.length; j++)
-                {
-                    item = tree.Edits[j];
-                    pivot.Edits.push({
-                        Path: item.Path,
-                        Column: item.Sum.Name,
-                        Amount: item.Sum.Local
-                    });
-                }
-                for(j=0; j<tree.Goals.length; j++)
-                {
-                    item = tree.Goals[j];
-                    pivot.Goals.push({
-                        Path: item.Path,
-                        Column: item.Sum.Name,
-                        Amount: item.Sum.Goal
-                    });
-                }
             }
-            console.log(JSON.stringify(output));
+            console.log(output);
             return output;
         },
         StateLoad: (inState) => 
@@ -306,7 +328,7 @@ App = {
     Render: {
         Update: (inModel, inMethods) =>
         {
-            console.log(inModel);
+            //console.log(inModel);
             render( App.Render.Layout(inModel, inMethods), document.querySelector("#App"));
         },
         Layout: (inModel, inMethods) =>
