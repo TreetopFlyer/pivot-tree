@@ -61,7 +61,15 @@ export const SumRows = (inTable, inSums) =>
     inTable.Sums = [];
     for(i=0; i<inSums.length; i++)
     {
-        inTable.Sums[i] = {Name:inSums[i], Value:0, Local:1, Parent:1, Child:0, Total:0};
+        inTable.Sums[i] = {
+            Name:inSums[i],
+            Value:0,
+            Local:1,
+            Parent:1,
+            Child:0,
+            Total:0,
+            Goal:0
+        };
         column = MapColumn(inTable, inSums[i]);
         for(j=0; j<inTable.Rows.length; j++)
         {

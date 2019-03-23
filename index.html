@@ -106,7 +106,6 @@ App.Methods = {
     },
     FormPivotSelect: (inIndex) =>
     {
-        console.log(inIndex);
         var form;
         form = App.Model.Form.Pivot;
         form.Closed.push(form.Open.splice(inIndex, 1));
@@ -143,82 +142,31 @@ App.Methods = {
         }
         return false;
     },
-    EditCreate: (inPath, inColumn, inAmount) =>
+    EditCreate: (inTable, inIndex, inAmount) =>
     {
-        var table;
         var column;
-        var sum;
         var adjust;
-
-        table = App.Methods.ResolvePath(inPath);
-        column = App.Methods.ResolveSum(inColumn);
-        sum = table.Sums[column];
-        if(sum.Edit)
-        {
-
-        }
-        else
-        {
-            sum.Edit = true;
-            App.Model.Active.Edits.push({Path:inPath, Sum:sum});
-        }
-
-        sum.Local += inAmount;
-        adjust = (sum.Value*sum.Local) - (sum.Value);
-        TweakUp(table, column, adjust);
-        TweakDown(table, column);
+        column = inTable.Sums[inIndex];
+        column.Local = inAmount;
+        adjust = (column.Value*column.Local) - (column.Value);
+        TweakUp(inTable, inIndex, adjust);
+        TweakDown(inTable, inIndex);
         Render.Update(App.Model, App.Methods);
     },
-    EditDelete: (inPath, inColumn)=>
+    EditDelete: (inTable, inIndex)=>
     {
-        var table;
+        App.Methods.EditCreate(inTable, inIndex, 1);
+    },
+    GoalCreate: (inTable, inIndex, inAmount) =>
+    {
         var column;
-        var sum;
-        var adjust;
-
-        table = App.Methods.ResolvePath(inPath);
-        column = App.Methods.ResolveSum(inColumn);
-        sum = table.Sums[column];
-        if(sum.Edit)
-        {
-            sum.Edit = false;
-            for(i=0; i<App.Model.Active.Edits)
-            {
-
-            }
-            App.Model.Active.Edits.push({Path:inPath, Sum:sum});
-        }
-        else
-        {
-
-        }
-
-        sum.Local = 1;
-        adjust = (sum.Value*sum.Local) - (sum.Value);
-        TweakUp(table, column, adjust);
-        TweakDown(table, column);
+        column = inTable.Sums[inIndex];
+        column.Goal = inAmount;
         Render.Update(App.Model, App.Methods);
     },
-    GoalCreate: (inPath, inColumn, inAmount) =>
+    GoalDelete: (inTable, inIndex) =>
     {
-        var table;
-        var column;
-        var sum;
-        var adjust;
-
-        table = App.Methods.ResolvePath(inPath);
-        column = App.Methods.ResolveSum(inColumn);
-        sum = table.Sums[column];
-        if(sum.Goal)
-        {
-
-        }
-        else
-        {
-            App.Model.Active.Goals.push({Path:inPath, Sum:sum});
-        }
-        sum.Goal = inAmount;
-        Render.Update(App.Model, App.Methods);
+        App.Methods.GoalCreate(inTable, inIndex, 0);
     },
     PivotCreate: (inArray) =>
     {
@@ -480,11 +428,11 @@ Render.Branch = (inModel, inMethods, inPath) =>
             }
             else
             {
-                markupGoal = html`<button @click=${()=>{inMethods.GoalCreate(path, inItem.Name, 100)} }>+</button>`;
+                markupGoal = html`<button @click=${()=>{inMethods.GoalCreate(inModel, inIndex, 100)} }>+</button>`;
             }
 
             return html`
-            <td class="Value" @click=${ ()=>{inMethods.EditCreate(path, inItem.Name, 1.33);} }>
+            <td class="Value" @click=${ ()=>{inMethods.EditCreate(inModel, inIndex, 1.33);} }>
                 ${inItem.Value.toFixed(2)}
             </td>
             <td class="Local">${inItem.Local}</td>
@@ -506,7 +454,7 @@ Render.Branch = (inModel, inMethods, inPath) =>
 App.Methods.PivotCreate(["Thing", "Type"]);
 App.Methods.PivotCreate(["Type", "Thing"]);
 */
-var state = {"Data":{"Source":"","Destination":""},"Pivots":[{"Pivot":["Thing","Type"],"Goals":[{"Path":["thing1"],"Column":"Count","Amount":100},{"Path":["thing1","a"],"Column":"Count","Amount":100}],"Edits":[{"Path":["thing1"],"Column":"Cost","Amount":10.31}]},{"Pivot":["Type","Thing"],"Goals":[{"Path":["a"],"Column":"Cost","Amount":100}],"Edits":[{"Path":["a"],"Column":"Cost","Amount":3.33},{"Path":["a","thing1"],"Column":"Cost","Amount":3.33}]}]};
-App.Methods.StateLoad(state);
+//var state = {"Data":{"Source":"","Destination":""},"Pivots":[{"Pivot":["Thing","Type"],"Goals":[{"Path":["thing1"],"Column":"Count","Amount":100},{"Path":["thing1","a"],"Column":"Count","Amount":100}],"Edits":[{"Path":["thing1"],"Column":"Cost","Amount":10.31}]},{"Pivot":["Type","Thing"],"Goals":[{"Path":["a"],"Column":"Cost","Amount":100}],"Edits":[{"Path":["a"],"Column":"Cost","Amount":3.33},{"Path":["a","thing1"],"Column":"Cost","Amount":3.33}]}]};
+//App.Methods.StateLoad(state);
 App.Methods.FormPivotReset();
 </script>
