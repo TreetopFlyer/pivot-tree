@@ -133,7 +133,9 @@ App = {
         },
         InferColumn: (inTable, inKey) =>
         {
-            return inTable.Sums[App.Methods.MapColumnIndex(inKey)];
+            var sumIndex = App.Methods.MapSumIndex(inKey);
+            var lookup = inTable.Sums[sumIndex]
+            return lookup;
         },
         MapColumnIndex: (inKey) =>
         {
@@ -151,7 +153,22 @@ App = {
         {
             return App.Model.Header[inIndex];
         },
-
+        MapSumIndex: (inKey) =>
+        {
+            var i;
+            var sum;
+            for(i=0; i<App.Model.Sums.length; i++)
+            {
+                if(App.Model.Sums[i] == inKey)
+                {
+                    return i;
+                }
+            }
+        },
+        MapSumKey: (inIndex) =>
+        {
+            return App.Model.Sums[inIndex];
+        },
         EditCreate: (inTable, inIndex, inAmount) =>
         {
             Tweak(inTable, inIndex, inAmount)
@@ -302,7 +319,6 @@ App = {
                 };
                 output.Pivots.push(pivot);
             }
-            console.log(output);
             App.Model.History.unshift(output);
             App.Render.Update(App.Model, App.Methods);
             return output;
@@ -333,13 +349,13 @@ App = {
                     {
                         column = table.Columns[k];
                         appColumn = App.Methods.InferColumn(appTable, column.Column);
-                        if(appColumn.Edit)
+                        if(column.Edit)
                         {
-                            AppMethods.EditCreate(appTable, column.IndexSum);
+                            App.Methods.EditCreate(appTable, appColumn.IndexSum, column.Edit);
                         }
-                        if(appColumn.Goal)
+                        if(column.Goal)
                         {
-                            AppMethods.GoalCreate(appTable, column.IndexSum);
+                            App.Methods.GoalCreate(appTable, appColumn.IndexSum, column.Goal);
                         }
                     }
                 }
@@ -349,7 +365,6 @@ App = {
     Render: {
         Update: (inModel, inMethods) =>
         {
-            //console.log(inModel);
             render( App.Render.Layout(inModel, inMethods), document.querySelector("#App"));
         },
         Layout: (inModel, inMethods) =>
