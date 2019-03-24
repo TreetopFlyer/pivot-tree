@@ -4,7 +4,8 @@ export const Pivot = (inRows, inIndiciesPivots, inIndiciesSums) =>
     var root;
     root = Table("Root", false, inRows, inIndiciesSums);
     PivotTree(root, inIndiciesPivots, inIndiciesSums);
-    SumRows(root);
+    //SumRows(root);
+    SumCheck(root);
     return root;
 };
 const PivotTree = (inTable, inColumns, inSums, inDepth) =>
@@ -19,14 +20,14 @@ const PivotTree = (inTable, inColumns, inSums, inDepth) =>
     {
         for(i=0; i<inTable.Children.length; i++)
         {
-            SumRows(inTable.Children[i]);
+            //SumRows(inTable.Children[i]);
         }
     }
     else
     {
         for(i=0; i<inTable.Children.length; i++)
         {
-            SumRows(inTable.Children[i]);
+            //SumRows(inTable.Children[i]);
             PivotTree(inTable.Children[i], inColumns, inSums, depth);
         }
     }
@@ -85,6 +86,44 @@ const Table = (inName, inParent, inRows, inSums) =>
     return table;
 };
 
+const SumCheck = (inTable)=>
+{
+    var i, j;
+    var row;
+    var sum;
+    var newTotal;
+    var change;
+
+    if(inTable.Children.length == 0)
+    {
+        console.log("at last branch", inTable);
+
+        for(i=0; i<inTable.Sums.length; i++)
+        {
+            sum = inTable.Sums[i];
+            newTotal = 0;
+            for(j=0; j<inTable.Rows.length; j++)
+            {
+                row = inTable.Rows[j];
+                newTotal += row[sum.IndexColumn];
+            }
+            change = newTotal-sum.Value;
+            if(change != 0)
+            {
+                console.log("summing up on", i);
+                sum.Value = newTotal;
+                TweakUp(inTable, i, change);
+            }
+        }
+    }
+    else
+    {
+        for(i=0; i<inTable.Children.length; i++)
+        {
+            SumCheck(inTable.Children[i]);
+        }
+    }
+};
 const SumRows = (inTable) =>
 {
     var i, j;
