@@ -1,34 +1,35 @@
-export const Table = (inName, inParent, inRows, inSums) =>
+
+export const Pivot = (inRows, inIndiciesPivots, inIndiciesSums) =>
 {
-    var table;
-    var i;
-    
-    table = {
-        Name:inName,
-        Rows:inRows,
-        Parent:inParent,
-        Children:[],
-        Sums:[]
-    };
-    for(i=0; i<inSums.length; i++)
-    {
-        table.Sums[i] = {
-            IndexSum:i,
-            IndexColumn:inSums[i],
-            Value:0,
-            Local:1,
-            Parent:1,
-            Child:0,
-            Total:0,
-            Goal:0
-        };
-    }
-    return table;
+    var root;
+    root = Table("Root", false, inRows, inIndiciesSums);
+    PivotTree(root, inIndiciesPivots, inIndiciesSums);
+    SumRows(root);
+    return root;
 };
-export const Pivot = (inTable, inIndiciesPivots, inIndiciesSums) =>
+const PivotTree = (inTable, inColumns, inSums, inDepth) =>
 {
-    PivotTree(inTable, inIndiciesPivots, inIndiciesSums);
-    SumRows(inTable);
+    var i;
+    var depth;
+    
+    depth = inDepth||0;
+    inTable.Children = PivotTable(inTable, inColumns[depth], inSums);
+    depth++;
+    if(depth == inColumns.length)
+    {
+        for(i=0; i<inTable.Children.length; i++)
+        {
+            SumRows(inTable.Children[i]);
+        }
+    }
+    else
+    {
+        for(i=0; i<inTable.Children.length; i++)
+        {
+            SumRows(inTable.Children[i]);
+            PivotTree(inTable.Children[i], inColumns, inSums, depth);
+        }
+    }
 };
 const PivotTable = (inTable, inColumnIndex, inSums) =>
 {
@@ -56,29 +57,32 @@ const PivotTable = (inTable, inColumnIndex, inSums) =>
     }
     return output;
 };
-const PivotTree = (inTable, inColumns, inSums, inDepth) =>
+const Table = (inName, inParent, inRows, inSums) =>
 {
+    var table;
     var i;
-    var depth;
     
-    depth = inDepth||0;
-    inTable.Children = PivotTable(inTable, inColumns[depth], inSums);
-    depth++;
-    if(depth == inColumns.length)
+    table = {
+        Name:inName,
+        Rows:inRows,
+        Parent:inParent,
+        Children:[],
+        Sums:[]
+    };
+    for(i=0; i<inSums.length; i++)
     {
-        for(i=0; i<inTable.Children.length; i++)
-        {
-            SumRows(inTable.Children[i]);
-        }
+        table.Sums[i] = {
+            IndexSum:i,
+            IndexColumn:inSums[i],
+            Value:0,
+            Local:1,
+            Parent:1,
+            Child:0,
+            Total:0,
+            Goal:0
+        };
     }
-    else
-    {
-        for(i=0; i<inTable.Children.length; i++)
-        {
-            SumRows(inTable.Children[i]);
-            PivotTree(inTable.Children[i], inColumns, inSums, depth);
-        }
-    }
+    return table;
 };
 
 const SumRows = (inTable) =>

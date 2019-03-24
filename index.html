@@ -65,7 +65,7 @@ td.Goal
 <div id="App"></div>
 <script type="module">
 import { html, render } from 'https://unpkg.com/lit-html/lit-html.js';
-import { Table, Pivot, Tweak, PathDown, PathUp } from './pivot.js';
+import { Pivot, Tweak, PathDown, PathUp } from './pivot.js';
 
 var App;
 App = {
@@ -193,7 +193,7 @@ App = {
         PivotCreate: (inArray) =>
         {
             var i;
-            var root, tree;
+            var tree;
             var indiciesSums;
             var indiciesPivots
 
@@ -214,11 +214,9 @@ App = {
             {
                 indiciesPivots[i] = App.Methods.MapColumnIndex(inArray[i]);
             }
-            root = Table("Root", false, App.Model.Rows, indiciesSums);
-            Pivot(root, indiciesPivots, indiciesSums);
             tree = {
                 Pivot: inArray,
-                Root: root
+                Root: Pivot(App.Model.Rows, indiciesPivots, indiciesSums)
             };
             App.Model.Trees.push(tree);
             App.Model.Active = tree;
