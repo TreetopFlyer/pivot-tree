@@ -104,8 +104,8 @@ App = {
     Methods: {
         Prep: ()=>
         {
-            var i;
-            var header;
+            var i, j;
+            var header, row;
             for(i=0; i<App.Model.Header.length; i++)
             {
                 header = App.Model.Header[i];
@@ -113,11 +113,28 @@ App = {
                 if(header.Sum)
                 {
                     App.Model.Sums.push(header);
+                    for(j=0; j<App.Model.Rows.length; j++)
+                    {
+                        row = App.Model.Rows[j];
+                        row[i] = {Original:row[i], Running:row[i], Epoch:0}
+                    }
                 }
                 if(header.Pivot)
                 {
                     App.Model.Pivots.push(header);
                 }
+            }
+            console.log(App.Model.Rows[0]);
+        },
+        AlterRecords: (inTable, inColumnIndex)=>
+        {
+            var i;
+            var row;
+
+            for(i=0; i<inTable.Rows.length; i++)
+            {
+                row = inTable.Rows[i];
+
             }
         },
         FormPivotReset: () =>
@@ -454,7 +471,7 @@ App = {
                     ${inModel.Sums.map( (inItem)=>
                     {
                         return html`
-                        <th class="Value">${inItem}</th>
+                        <th class="Value">${inItem.Display}</th>
                         <th class="Local">(xL</th>
                         <th class="Parent">xP</th>
                         <th class="Child">+C</th>
