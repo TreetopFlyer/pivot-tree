@@ -70,21 +70,26 @@ import { Pivot, Tweak, PathDown, PathUp } from './pivot.js';
 var App;
 App = {
     Model: {
-        Header: ["Thing", "Type", "Cost", "Count"],
-        Sums:   [                 "Cost", "Count"],
-        Pivot:  ["Thing", "Type",                ],
+        Header: [
+                    {Display:"Thing", Key:"thing", Sum:false, Pivot:true },
+                    {Display:"Type",  Key:"type",  Sum:false, Pivot:true },
+                    {Display:"Cost",  Key:"cost",  Sum:true,  Pivot:false},
+                    {Display:"Count", Key:"count", Sum:true,  Pivot:false},
+                ],
+        Sums:   [],
+        Pivots: [],
         Rows:   [
-                ["thing1", "a",    1,      1     ],
-                ["thing1", "b",    2,      1     ],
-                ["thing1", "a",    3,      2     ],
-                ["thing1", "b",    4,      2     ],
-                ["thing2", "a",    1,      2     ],
-                ["thing2", "b",    2,      2     ],
-                ["thing2", "a",    3,      2     ],
-                ["thing2", "b",    4,      2     ],
-                ["thing2", "a",    5,      1     ],
-                ["thing2", "b",    6,      1     ],
-                ["thing2", "a",    7,      1     ]
+                    ["thing1", "a",  1,  1  ],
+                    ["thing1", "b",  2,  1  ],
+                    ["thing1", "a",  3,  2  ],
+                    ["thing1", "b",  4,  2  ],
+                    ["thing2", "a",  1,  2  ],
+                    ["thing2", "b",  2,  2  ],
+                    ["thing2", "a",  3,  2  ],
+                    ["thing2", "b",  4,  2  ],
+                    ["thing2", "a",  5,  1  ],
+                    ["thing2", "b",  6,  1  ],
+                    ["thing2", "a",  7,  1  ]
                 ],
         Trees:  [],
         Active:false,
@@ -97,30 +102,70 @@ App = {
         History:[]
     },
     Methods: {
+        Prep: ()=>
+        {
+            var i;
+            var header;
+            for(i=0; i<App.Model.Header.length; i++)
+            {
+                header = App.Model.Header[i];
+                header.Index = i;
+                if(header.Sum)
+                {
+                    App.Model.Sums.push(header);
+                }
+                if(header.Pivot)
+                {
+                    App.Model.Pivots.push(header);
+                }
+            }
+        },
         FormPivotReset: () =>
         {
             var form;
             form = App.Model.Form.Pivot;
-            form.Open = App.Model.Pivot.slice();
+            form.Open = App.Model.Pivots.slice();
             form.Closed = [];
             App.Render.Update(App.Model, App.Methods);
         },
-        FormPivotSelect: (inIndex) =>
+        FormPivotUpdate: (inIndex) =>
         {
             var form;
             form = App.Model.Form.Pivot;
-            form.Closed.push(form.Open.splice(inIndex, 1));
+            form.Closed.push(form.Open.splice(inIndex, 1)[0]);
+            console.log(form.Closed);
             App.Render.Update(App.Model, App.Methods);
+        },
+        FormPivotSubmit: ()=>
+        {
+            var form;
+            var keys;
+            var i;
+
+            form = App.Model.Form.Pivot;
+            keys = [];
+            for(i=0; i<form.Closed.length; i++)
+            {
+                keys.push(form.Closed[i].Key);
+            }
+            App.Methods.FormPivotReset();
+            App.Methods.PivotCreate(keys);
         },
         InferPivot: (inTrees, inArray) => 
         {
             var i, j;
-            var joiner = "|>-";
+            var joiner;
             var tree;
-            var check = inArray.join(joiner);
+            var check;
+            var against;
+
+            joiner = "|>-";
+            check = inArray.join(joiner);
             for(i=0; i<inTrees.length; i++)
             {
-                if(check == inTrees[i].Pivot.join(joiner) )
+                tree = inTrees[i];
+                against = tree.Pivot.join(joiner);
+                if(check == against)
                 {
                     return tree;
                 }
@@ -196,27 +241,18 @@ App = {
             var tree;
             var indiciesSums;
             var indiciesPivots
+            var check;
 
-            if(App.Methods.InferPivot(App.Model.Trees, inArray))
+            check = App.Methods.InferPivot(App.Model.Trees, inArray)
+            if(check)
             {
-                App.Model.Active = App.Model.Trees[i];
+                App.Model.Active = check;
                 App.Render.Update(App.Model, App.Methods);
                 return;
             }
-
-            indiciesSums = [];
-            indiciesPivots = [];
-            for(i=0; i<App.Model.Sums.length; i++)
-            {
-                indiciesSums[i] = App.Methods.MapColumnIndex(App.Model.Sums[i]);
-            }
-            for(i=0; i<inArray.length; i++)
-            {
-                indiciesPivots[i] = App.Methods.MapColumnIndex(inArray[i]);
-            }
             tree = {
                 Pivot: inArray,
-                Root: Pivot(App.Model.Rows, indiciesPivots, indiciesSums)
+                Root: Pivot(App.Model.Rows, App.Model.Pivots, App.Model.Sums)
             };
             App.Model.Trees.push(tree);
             App.Model.Active = tree;
@@ -385,31 +421,20 @@ App = {
             <div>
                 <ul>
                     ${inModel.Closed.map( (inItem, inIndex)=>{
-                        return html`<li>${inItem}</li>`
+                        return html`<li>${inItem.Display}</li>`
                     })}
                 </ul>
-                <select @change=${(inEvent)=>
-                {
-                    inMethods.FormPivotSelect(inEvent.target.selectedIndex-1); 
-                    inEvent.target.selectedIndex = 0;
-                }}>
+                <select @change=${(inEvent)=>{ inMethods.FormPivotUpdate(inEvent.target.selectedIndex-1); inEvent.target.selectedIndex = 0; }}>
                     <option>Add column</option>
                     ${inModel.Open.map( (inItem, inIndex)=>
                     {
-                        return html`<option>${inItem}</option>`
+                        return html`<option>${inItem.Display}</option>`
                     })}
                 </select>
-                <button @click=${ ()=>
-                {
-                    inMethods.PivotCreate(inModel.Closed);
-                    inMethods.FormPivotReset();
-                }}>
+                <button @click=${ ()=>{inMethods.FormPivotSubmit();}}>
                     Create
                 </button>
-                <button @click=${ ()=>
-                {
-                    inMethods.FormPivotReset();
-                }}>
+                <button @click=${ ()=>{inMethods.FormPivotReset();}}>
                     Cancel
                 </button>
 
@@ -485,5 +510,6 @@ App = {
     }
 };
 
+App.Methods.Prep();
 App.Methods.FormPivotReset();
 </script>
