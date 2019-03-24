@@ -1,12 +1,40 @@
+export const Table = (inName, inParent, inRows, inSums) =>
+{
+    var table;
+    var i;
+    
+    table = {
+        Name:inName,
+        Rows:inRows,
+        Parent:inParent,
+        Children:[],
+        Sums:[]
+    };
+    for(i=0; i<inSums.length; i++)
+    {
+        table.Sums[i] = {
+            IndexSum:i,
+            IndexColumn:inSums[i],
+            Value:0,
+            Local:1,
+            Parent:1,
+            Child:0,
+            Total:0,
+            Goal:0
+        };
+    }
+    return table;
+};
 export const Pivot = (inTable, inIndiciesPivots, inIndiciesSums) =>
 {
     PivotTree(inTable, inIndiciesPivots, inIndiciesSums);
-    SumRows(inTable, inIndiciesSums);
-}
-const PivotTable = (inTable, inColumnIndex) =>
+    SumRows(inTable);
+};
+const PivotTable = (inTable, inColumnIndex, inSums) =>
 {
     var i, j;
     var output;
+    var table;
     var row;
     var cell;
     output = [];
@@ -23,13 +51,8 @@ const PivotTable = (inTable, inColumnIndex) =>
                 continue rows;
             }
         }
-        output.push({
-            Name:cell,
-            Header:inTable.Header,
-            Rows:[row],
-            Parent:inTable,
-            Children:[]
-        });
+        table = Table(cell, inTable, [row], inSums);
+        output.push(table);
     }
     return output;
 };
@@ -39,49 +62,37 @@ const PivotTree = (inTable, inColumns, inSums, inDepth) =>
     var depth;
     
     depth = inDepth||0;
-    inTable.Children = PivotTable(inTable, inColumns[depth]);
+    inTable.Children = PivotTable(inTable, inColumns[depth], inSums);
     depth++;
     if(depth == inColumns.length)
     {
         for(i=0; i<inTable.Children.length; i++)
         {
-            SumRows(inTable.Children[i], inSums);
+            SumRows(inTable.Children[i]);
         }
     }
     else
     {
         for(i=0; i<inTable.Children.length; i++)
         {
-            SumRows(inTable.Children[i], inSums);
+            SumRows(inTable.Children[i]);
             PivotTree(inTable.Children[i], inColumns, inSums, depth);
         }
     }
 };
 
-const Sum = (inSumIndex) =>
-{
-    return {
-        Index:inSumIndex,
-        Value:0,
-        Local:1,
-        Parent:1,
-        Child:0,
-        Total:0,
-        Goal:0
-    };
-}
-const SumRows = (inTable, inSums) =>
+const SumRows = (inTable) =>
 {
     var i, j;
     var row;
-    inTable.Sums = [];
-    for(i=0; i<inSums.length; i++)
+    var sum;
+    for(i=0; i<inTable.Sums.length; i++)
     {
-        inTable.Sums[i] = Sum(inTable.Sums.length);
+        sum = inTable.Sums[i];
         for(j=0; j<inTable.Rows.length; j++)
         {
             row = inTable.Rows[j];
-            inTable.Sums[i].Value += row[inSums[i]];
+            sum.Value += row[sum.IndexColumn];
         }
     }
 };
@@ -95,7 +106,7 @@ export const Tweak = (inTable, inColumnIndex, inAmount) =>
     adjust = (column.Value*column.Local) - (column.Value);
     TweakUp(inTable, inColumnIndex, adjust);
     TweakDown(inTable, inColumnIndex);
-}
+};
 const TweakUp = (inTable, inColumn, inAmount) =>
 {
     if(inTable.Parent)

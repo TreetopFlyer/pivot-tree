@@ -65,7 +65,7 @@ td.Goal
 <div id="App"></div>
 <script type="module">
 import { html, render } from 'https://unpkg.com/lit-html/lit-html.js';
-import { Pivot, Tweak, PathDown, PathUp } from './pivot.js';
+import { Table, Pivot, Tweak, PathDown, PathUp } from './pivot.js';
 
 var App;
 App = {
@@ -204,13 +204,6 @@ App = {
                 return;
             }
 
-            root = {
-                Name:"Root",
-                Header:App.Model.Header,
-                Rows:App.Model.Rows,
-                Parent:false,
-                Sums:[]
-            };
             indiciesSums = [];
             indiciesPivots = [];
             for(i=0; i<App.Model.Sums.length; i++)
@@ -221,6 +214,7 @@ App = {
             {
                 indiciesPivots[i] = App.Methods.MapColumnIndex(inArray[i]);
             }
+            root = Table("Root", false, App.Model.Rows, indiciesSums);
             Pivot(root, indiciesPivots, indiciesSums);
             tree = {
                 Pivot: inArray,
@@ -351,11 +345,11 @@ App = {
                         appColumn = App.Methods.InferColumn(appTable, column.Column);
                         if(column.Edit)
                         {
-                            App.Methods.EditCreate(appTable, appColumn.Index, column.Edit);
+                            App.Methods.EditCreate(appTable, appColumn.IndexSum, column.Edit);
                         }
                         if(column.Goal)
                         {
-                            App.Methods.GoalCreate(appTable, appColumn.Index, column.Goal);
+                            App.Methods.GoalCreate(appTable, appColumn.IndexSum, column.Goal);
                         }
                     }
                 }
