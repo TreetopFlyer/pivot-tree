@@ -36,7 +36,9 @@ const PivotTable = (inTable, inColumnIndex) =>
 const PivotTree = (inTable, inColumns, inSums, inDepth) =>
 {
     var i;
-    var depth = inDepth||0;
+    var depth;
+    
+    depth = inDepth||0;
     inTable.Children = PivotTable(inTable, inColumns[depth]);
     depth++;
     if(depth == inColumns.length)
@@ -75,7 +77,7 @@ const SumRows = (inTable, inSums) =>
     inTable.Sums = [];
     for(i=0; i<inSums.length; i++)
     {
-        inTable.Sums[i] = Sum(inSums[i], inTable.Sums.length);
+        inTable.Sums[i] = Sum(inTable.Sums.length);
         for(j=0; j<inTable.Rows.length; j++)
         {
             row = inTable.Rows[j];
@@ -122,16 +124,9 @@ export const PathDown = (inTable, inPath, inIndex) =>
     var child;
     var lookup;
     var index;
-    if(inIndex)
-    {
-        index = inIndex;
-    }
-    else
-    {
-        index = 0;
-    }
-    lookup = inPath[index];
 
+    index = inIndex||0;
+    lookup = inPath[index];
     for(i=0; i<inTable.Children.length; i++)
     {
         child = inTable.Children[i];
