@@ -93,7 +93,7 @@ const Sum = (inTable, inProcessor)=>
             for(j=0; j<inTable.Rows.length; j++)
             {
                 row = inTable.Rows[j];
-                newTotal += row[sum.IndexColumn].Running;
+                newTotal += row[sum.IndexColumn].Original;
             }
             inProcessor(inTable, sum, i, newTotal);
         }

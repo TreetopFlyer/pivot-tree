@@ -99,7 +99,8 @@ App = {
                 Closed:[]
             }
         },
-        History:[]
+        History:[],
+        Epoch:0
     },
     Methods: {
         Prep: ()=>
@@ -116,25 +117,13 @@ App = {
                     for(j=0; j<App.Model.Rows.length; j++)
                     {
                         row = App.Model.Rows[j];
-                        row[i] = {Original:row[i], Running:row[i], Epoch:0}
+                        row[i] = {Original:row[i], Scale:1, Epoch:0}
                     }
                 }
                 if(header.Pivot)
                 {
                     App.Model.Pivots.push(header);
                 }
-            }
-            console.log(App.Model.Rows[0]);
-        },
-        AlterRecords: (inTable, inColumnIndex)=>
-        {
-            var i;
-            var row;
-
-            for(i=0; i<inTable.Rows.length; i++)
-            {
-                row = inTable.Rows[i];
-
             }
         },
         FormPivotReset: () =>
@@ -150,7 +139,7 @@ App = {
             var form;
             form = App.Model.Form.Pivot;
             form.Closed.push(form.Open.splice(inIndex, 1)[0]);
-            console.log(form.Closed);
+            console.log("picot list is now:", form.Closed);
             App.Render.Update(App.Model, App.Methods);
         },
         FormPivotSubmit: ()=>
@@ -199,22 +188,6 @@ App = {
             var lookup = inTable.Sums[sumIndex]
             return lookup;
         },
-        MapColumnIndex: (inKey) =>
-        {
-            var i;
-            var sum;
-            for(i=0; i<App.Model.Header.length; i++)
-            {
-                if(App.Model.Header[i] == inKey)
-                {
-                    return i;
-                }
-            }
-        },
-        MapColumnKey: (inIndex) =>
-        {
-            return App.Model.Header[inIndex];
-        },
         MapSumIndex: (inKey) =>
         {
             var i;
@@ -260,13 +233,16 @@ App = {
             var indiciesPivots
             var check;
 
+            console.log("creating pivot", inArray, "...");
             check = App.Methods.InferPivot(App.Model.Trees, inArray)
             if(check)
             {
+                ("...already exists");
                 App.Model.Active = check;
                 App.Render.Update(App.Model, App.Methods);
                 return;
             }
+            console.log("...its new!");
             tree = {
                 Pivot: inArray,
                 Root: Pivot(App.Model.Rows, App.Model.Pivots, App.Model.Sums)
