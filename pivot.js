@@ -13,7 +13,7 @@ const PivotTree = (inTable, inColumns, inSums, inDepth) =>
     var depth;
     
     depth = inDepth||0;
-    inTable.Children = PivotTable(inTable, inColumns[depth].Index, inSums);
+    inTable.Children = PivotTable(inTable, inColumns[depth], inSums);
     depth++;
     if(depth != inColumns.length)
     {
@@ -65,7 +65,7 @@ const Table = (inName, inParent, inRows, inSums) =>
     {
         table.Sums[i] = {
             IndexSum:i,
-            IndexColumn:inSums[i].Index,
+            IndexColumn:inSums[i],
             Value:0,
             Local:1,
             Parent:1,
