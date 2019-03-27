@@ -404,18 +404,19 @@ App = {
             </div>
             <div class="Section">
                 <h3>Pivots</h3>
-                ${App.Render.FormPivot(inModel, inMethods)}
+                ${App.Render.Pivots(inModel, inMethods)}
+                ${App.Render.PivotForm(inModel, inMethods)}
             </div>
             <div class="Section">
                 <h3>View</h3>
-                ${App.Render.Tree(inModel, inMethods)}
+                ${App.Render.Pivot(inModel, inMethods)}
             </div>
             `;
         },
-        FormPivot: (inModel, inMethods) =>
+        PivotForm: (inModel, inMethods) =>
         {
             return html`
-            <div>
+            <div class="Pivot">
                 <ul>
                     ${inModel.Form.Pivot.Closed.map( (inItem)=>{
                         return html`<li>${inModel.Display[inItem]}</li>`
@@ -438,7 +439,57 @@ App = {
             </div>
             `;
         },
-        Tree: (inModel, inMethods) =>
+        Pivots: (inModel, inMethods) =>
+        {
+            return inModel.Trees.map( (inItem)=>
+            {
+                return html`
+                <div class="Pivot">
+                    <ul @click=${ ()=>{inMethods.PivotSelect(inItem);App.Render.Update();} }>
+                    ${inItem.Pivot.map( (inItem)=>{
+                        return html`<li>${inModel.Display[inItem]}</li>`;
+                    } )}
+                    </ul>
+                    ${App.Render.BranchCondensed(inItem.Root, inMethods)}
+                </div>`;
+            });
+        },
+        BranchCondensed:(inModel, inMethods)=>
+        {
+            var edits = [];
+            var goals = [];
+
+            inModel.Sums.map( (inItem)=>
+            {
+                var total;
+                var markupGoal;
+                var markupEdit;
+                total = (inItem.Outside) * inItem.Local * inItem.Parent + inItem.Child;
+                if(inItem.Goal != 0)
+                {
+                    goals.push( html`Goal: ${inItem.Goal}` );
+                }
+
+                if(inItem.Local != 1)
+                {
+                    edits.push( html`Edit: ${inItem.Local}` );
+                }
+            }
+            );
+
+            return html`
+            <div class="Edits">
+                ${edits.map( (inItem)=>{return inItem;} )}
+            </div>
+            <div class="Goals">
+                ${goals.map( (inItem)=>{return inItem;} )}
+            </div>
+            ${inModel.Children.map( (inItem)=>{
+                return App.Render.BranchCondensed(inItem, inMethods);
+            } )}
+            `;
+        },
+        Pivot: (inModel, inMethods) =>
         {
             if(!inModel.Active)
             {
@@ -466,19 +517,18 @@ App = {
             </table>
             `;
         },
-        Branch: (inModel, inMethods, inPath) =>
+        Branch: (inModel, inMethods) =>
         {
-            var path = inPath.concat([inModel.Name]);
             return html`
             <tr>
                 <td>
-                    ${path.join("/")}
+                    ${inModel.Name}
                 </td>
                 ${inModel.Sums.map( (inItem, inIndex)=>{
 
                     var total;
                     var markupGoal;
-                    total = inItem.Value * inItem.Local * inItem.Parent + inItem.Child;
+                    total = inItem.Outside * inItem.Local * inItem.Parent + inItem.Child;
                     if(inItem.Goal != 0)
                     {
                         markupGoal = html`${inItem.Goal}`;
@@ -502,7 +552,7 @@ App = {
                 } )}
             </tr>
             ${inModel.Children.map( (inItem)=>{
-                return App.Render.Branch(inItem, inMethods, path);
+                return App.Render.Branch(inItem, inMethods);
             } )}
             `;
         }
