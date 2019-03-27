@@ -142,17 +142,33 @@ export const Tweak = (inTable, inColumnIndex, inAmount) =>
     var column;
     var adjust;
     var change;
+    var i;
+    var row;
+    var cell;
+
     column = inTable.Sums[inColumnIndex];
     change = inAmount - column.Local;
     if(change == 0)
     {
         return;
     }
+
+    for(i=0; i<inTable.Rows.length; i++)
+    {
+        row = inTable.Rows[i];
+        cell = row[column.IndexColumn];
+        cell.Modified = cell.Original*inAmount;
+    }
+    
     column.Local = inAmount;
     adjust = (column.Value*column.Local) - (column.Value);
     TweakUp(inTable, inColumnIndex, adjust, TweakUpChild);
     TweakDown(inTable, inColumnIndex);
 };
+export const TweakCheck = (inRoot)=>
+{
+    ProcessLeaves(inRoot, SumOutside);
+}
 const TweakDown = (inTable, inColumn) =>
 {
     var i;

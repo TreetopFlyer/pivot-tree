@@ -65,7 +65,7 @@ td.Goal
 <div id="App"></div>
 <script type="module">
 import { html, render } from 'https://unpkg.com/lit-html/lit-html.js';
-import { Pivot, Tweak, PathDown, PathUp } from './pivot.js';
+import { Pivot, Tweak, TweakCheck, PathDown, PathUp } from './pivot.js';
 
 var App;
 App = {
@@ -103,7 +103,7 @@ App = {
         {
             var i, j;
             var indicies;
-            var index, row;
+            var index, row, cell;
             indicies = App.Methods.GetColumnIndicies(App.Model.Sums);
             for(i=0; i<indicies.length; i++)
             {
@@ -111,7 +111,8 @@ App = {
                 for(j=0; j<App.Model.Rows.length; j++)
                 {
                     row = App.Model.Rows[j];
-                    row[index] = {Original:row[index], Modified:0, Epoch:0}
+                    cell = row[index];
+                    row[index] = {Original:cell, Modified:cell, Epoch:0}
                 }
             }
         },
@@ -146,6 +147,7 @@ App = {
                 against = tree.Pivot.join(joiner);
                 if(check == against)
                 {
+                    App.Methods.FormPivotReset();
                     App.Methods.PivotSelect(tree);
                     return;
                 }
@@ -214,7 +216,18 @@ App = {
         },
         EditCreate: (inTable, inIndex, inAmount) =>
         {
-            Tweak(inTable, inIndex, inAmount)
+            var i;
+            Tweak(inTable, inIndex, inAmount);
+
+            for(i=0; i<App.Model.Trees.length; i++)
+            {
+                if(App.Model.Trees[i] == App.Model.Active)
+                {
+                    continue;
+                }
+                TweakCheck(App.Model.Trees[i].Root);
+            }
+
             App.Render.Update(App.Model, App.Methods);
         },
         EditDelete: (inTable, inIndex)=>
@@ -241,6 +254,7 @@ App = {
                 Pivot: inArray,
                 Root: Pivot(App.Model.Rows, inArray, App.Methods.GetColumnIndicies(App.Model.Sums))
             };
+            TweakCheck(tree.Root);
             App.Model.Trees.push(tree);
             App.Model.Active = tree;
             App.Render.Update(App.Model, App.Methods);
