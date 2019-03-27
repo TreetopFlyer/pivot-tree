@@ -111,7 +111,7 @@ App = {
                 for(j=0; j<App.Model.Rows.length; j++)
                 {
                     row = App.Model.Rows[j];
-                    row[index] = {Original:row[index], Scale:1, Epoch:0}
+                    row[index] = {Original:row[index], Modified:0, Epoch:0}
                 }
             }
         },
@@ -441,8 +441,9 @@ App = {
                     ${inModel.Sums.map( (inItem)=>
                     {
                         return html`
-                        <th class="Value">${inItem.Display}</th>
-                        <th class="Local">(xL</th>
+                        <th class="Value">(${inItem}</th>
+                        <th class="Outside">+O)</th>
+                        <th class="Local">xL</th>
                         <th class="Parent">xP</th>
                         <th class="Child">+C</th>
                         <th class="Total">=T</th>
@@ -481,6 +482,7 @@ App = {
                     <td class="Value" @click=${ ()=>{inMethods.EditCreate(inModel, inIndex, 1.33);} }>
                         ${inItem.Value.toFixed(2)}
                     </td>
+                    <td class="Outside">${inItem.Outside}</td>
                     <td class="Local">${inItem.Local}</td>
                     <td class="Parent">${inItem.Parent}</td>
                     <td class="Child">${inItem.Child}</td>

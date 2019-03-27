@@ -4,7 +4,7 @@ export const Pivot = (inRows, inColumnsPivots, inColumnsSums) =>
     var root;
     root = Table("Root", false, inRows, inColumnsSums);
     PivotTree(root, inColumnsPivots, inColumnsSums);
-    Sum(root, SumValue);
+    ProcessLeaves(root, SumValue);
     return root;
 };
 const PivotTree = (inTable, inColumns, inSums, inDepth) =>
@@ -67,6 +67,7 @@ const Table = (inName, inParent, inRows, inSums) =>
             IndexSum:i,
             IndexColumn:inSums[i],
             Value:0,
+            Outside:0,
             Local:1,
             Parent:1,
             Child:0,
@@ -77,53 +78,62 @@ const Table = (inName, inParent, inRows, inSums) =>
     return table;
 };
 
-const Sum = (inTable, inProcessor)=>
+const ProcessLeaves = (inTable, inProcessor)=>
 {
-    var i, j;
-    var row;
-    var sum;
-    var newTotal;
-
+    var i;
     if(inTable.Children.length == 0)
     {
         for(i=0; i<inTable.Sums.length; i++)
         {
-            sum = inTable.Sums[i];
-            newTotal = 0;
-            for(j=0; j<inTable.Rows.length; j++)
-            {
-                row = inTable.Rows[j];
-                newTotal += row[sum.IndexColumn].Original;
-            }
-            inProcessor(inTable, sum, i, newTotal);
+            inProcessor(inTable, inTable.Sums[i], i);
         }
     }
     else
     {
         for(i=0; i<inTable.Children.length; i++)
         {
-            Sum(inTable.Children[i], inProcessor);
+            ProcessLeaves(inTable.Children[i], inProcessor);
         }
     }
 };
-const SumValue = (inTable, inSum, inSumIndex, inNewTotal) =>
+const SumValue = (inTable, inSum, inSumIndex) =>
 {
+    var newTotal;
+    var j;
+    var row;
     var change;
-    change = inNewTotal-inSum.Value;
+
+    newTotal = 0;
+    for(j=0; j<inTable.Rows.length; j++)
+    {
+        row = inTable.Rows[j];
+        newTotal += row[inSum.IndexColumn].Original;
+    }
+    change = newTotal-inSum.Value;
     if(change != 0)
     {
-        inSum.Value = inNewTotal;
+        inSum.Value = newTotal;
         TweakUp(inTable, inSumIndex, change, TweakUpValue);
     }
 };
-const SumChild = (inTable, inSum, inSumIndex, inNewTotal) =>
+const SumOutside = (inTable, inSum, inSumIndex) =>
 {
+    var newTotal;
+    var j;
+    var row;
     var change;
-    change = inNewTotal-inSum.Child;
+
+    newTotal = 0;
+    for(j=0; j<inTable.Rows.length; j++)
+    {
+        row = inTable.Rows[j];
+        newTotal += row[inSum.IndexColumn].Modified;
+    }
+    change = newTotal-inSum.Outside;
     if(change != 0)
     {
-        inSum.Child = inNewTotal;
-        TweakUp(inTable, inSumIndex, change, TweakUpChild);
+        inSum.Outside = newTotal;
+        TweakUp(inTable, inSumIndex, change, TweakUpOutside);
     }
 };
 
@@ -164,13 +174,18 @@ const TweakUp = (inTable, inColumn, inAmount, inProcessor) =>
         TweakUp(inTable.Parent, inColumn, inAmount, inProcessor);
     }
 };
-const TweakUpChild = (inObj, inAmount) =>
-{
-    inObj.Child += inAmount;
-};
+
 const TweakUpValue = (inObj, inAmount) =>
 {
     inObj.Value += inAmount;
+};
+const TweakUpOutside = (inObj, inAmount) =>
+{
+    inObj.Outside += inAmount;
+};
+const TweakUpChild = (inObj, inAmount) =>
+{
+    inObj.Child += inAmount;
 };
 
 export const PathDown = (inTable, inPath, inIndex) =>
