@@ -122,14 +122,12 @@ App = {
             form = App.Model.Form.Pivot;
             form.Open = App.Methods.GetColumnIndicies(App.Model.Pivots);
             form.Closed = [];
-            App.Render.Update(App.Model, App.Methods);
         },
         FormPivotUpdate: (inIndex) =>
         {
             var form;
             form = App.Model.Form.Pivot;
             form.Closed.push(form.Open.splice(inIndex, 1)[0]);
-            App.Render.Update(App.Model, App.Methods);
         },
         FormPivotSubmit: ()=>
         {
@@ -227,20 +225,18 @@ App = {
                 }
                 TweakCheck(App.Model.Trees[i].Root);
             }
-
-            App.Render.Update(App.Model, App.Methods);
         },
         EditDelete: (inTable, inIndex)=>
         {
             Tweak(inTable, inIndex, 0)
-            App.Render.Update(App.Model, App.Methods);
+            
         },
         GoalCreate: (inTable, inIndex, inAmount) =>
         {
             var column;
             column = inTable.Sums[inIndex];
             column.Goal = inAmount;
-            App.Render.Update(App.Model, App.Methods);
+            
         },
         GoalDelete: (inTable, inIndex) =>
         {
@@ -257,13 +253,13 @@ App = {
             TweakCheck(tree.Root);
             App.Model.Trees.push(tree);
             App.Model.Active = tree;
-            App.Render.Update(App.Model, App.Methods);
+            
             return tree;
         },
         PivotSelect: (inPivot)=>
         {
             App.Model.Active = inPivot;
-            App.Render.Update(App.Model, App.Methods);
+            
         },
         PivotDelete: (inPivot) =>
         {
@@ -279,7 +275,7 @@ App = {
                     App.Model.Trees.splice(i, 1);
                 }
             }
-            App.Render.Update(App.Model, App.Methods);
+            
         },
         StatePivot: (inTable, inList) =>
         {
@@ -349,7 +345,7 @@ App = {
                 output.Pivots.push(pivot);
             }
             App.Model.History.unshift(output);
-            App.Render.Update(App.Model, App.Methods);
+            
             return output;
         },
         StateLoad: (inState) => 
@@ -392,18 +388,18 @@ App = {
         }
     },
     Render: {
-        Update: (inModel, inMethods) =>
+        Update: () =>
         {
-            render( App.Render.Layout(inModel, inMethods), document.querySelector("#App"));
+            render( App.Render.Layout(App.Model, App.Methods), document.querySelector("#App"));
         },
         Layout: (inModel, inMethods) =>
         {
             return html`
             <div class="Section">
                 <h3>State</h3>
-                <button @click=${ ()=>{inMethods.StateSave();} }>Save</button>
+                <button @click=${ ()=>{inMethods.StateSave();App.Render.Update();} }>Save</button>
                 ${inModel.History.map( (inItem, inIndex)=>{
-                    return html`<button @click=${ ()=>{inMethods.StateLoad(inModel.History[inIndex]);} }>${inIndex}</button>`;
+                    return html`<button @click=${ ()=>{inMethods.StateLoad(inModel.History[inIndex]);App.Render.Update();} }>${inIndex}</button>`;
                 } )}
             </div>
             <div class="Section">
@@ -425,17 +421,17 @@ App = {
                         return html`<li>${inModel.Display[inItem]}</li>`
                     })}
                 </ul>
-                <select @change=${(inEvent)=>{ inMethods.FormPivotUpdate(inEvent.target.selectedIndex-1); inEvent.target.selectedIndex = 0; }}>
+                <select @change=${(inEvent)=>{ inMethods.FormPivotUpdate(inEvent.target.selectedIndex-1); inEvent.target.selectedIndex = 0;App.Render.Update(); }}>
                     <option>Add column</option>
                     ${inModel.Form.Pivot.Open.map( (inItem)=>
                     {
                         return html`<option>${inModel.Display[inItem]}</option>`
                     })}
                 </select>
-                <button @click=${ ()=>{inMethods.FormPivotSubmit();}}>
+                <button @click=${ ()=>{inMethods.FormPivotSubmit();App.Render.Update();}}>
                     Create
                 </button>
-                <button @click=${ ()=>{inMethods.FormPivotReset();}}>
+                <button @click=${ ()=>{inMethods.FormPivotReset();App.Render.Update();}}>
                     Cancel
                 </button>
 
@@ -489,11 +485,11 @@ App = {
                     }
                     else
                     {
-                        markupGoal = html`<button @click=${()=>{inMethods.GoalCreate(inModel, inIndex, 100)} }>+</button>`;
+                        markupGoal = html`<button @click=${()=>{inMethods.GoalCreate(inModel, inIndex, 100);App.Render.Update();} }>+</button>`;
                     }
 
                     return html`
-                    <td class="Value" @click=${ ()=>{inMethods.EditCreate(inModel, inIndex, 1.33);} }>
+                    <td class="Value" @click=${ ()=>{inMethods.EditCreate(inModel, inIndex, 1.33);App.Render.Update();} }>
                         ${inItem.Value.toFixed(2)}
                     </td>
                     <td class="Outside">${inItem.Outside}</td>
@@ -514,6 +510,6 @@ App = {
 };
 
 App.Methods.Prep();
-App.Methods.FormPivotReset();
+App.Methods.FormPivotReset();App.Render.Update();
 console.log(App.Model);
 </script>
