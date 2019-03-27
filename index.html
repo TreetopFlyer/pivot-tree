@@ -163,7 +163,7 @@ App = {
             var i;
             var column;
 
-            indexColumn = GetColumnIndex(inKey);
+            indexColumn = App.Methods.GetColumnIndex(inKey);
             for(i=0; i<inTable.Sums.length; i++)
             {
                 column = inTable.Sums[i];
@@ -329,14 +329,13 @@ App = {
             {
                 tree = App.Model.Trees[i];
                 pivot = {
-                    Pivot:App.Methods.GetColumnIndicies(tree.Pivot),
+                    Pivot:App.Methods.GetColumnKeys(tree.Pivot),
                     Changes:App.Methods.StatePivot(tree.Root, []),
                 };
                 output.Pivots.push(pivot);
             }
             App.Model.History.unshift(output);
             App.Render.Update(App.Model, App.Methods);
-            console.log(output);
             return output;
         },
         StateLoad: (inState) => 
@@ -355,7 +354,7 @@ App = {
             for(i=0; i<inState.Pivots.length; i++)
             {
                 tree = inState.Pivots[i];
-                appTree = App.Methods.PivotCreate(tree.Pivot);
+                appTree = App.Methods.PivotCreate(App.Methods.GetColumnIndicies(tree.Pivot));
                 for(j=0; j<tree.Changes.length; j++)
                 {
                     table = tree.Changes[j];
