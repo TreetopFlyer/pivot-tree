@@ -72,7 +72,9 @@ const Table = (inName, inParent, inRows, inSums) =>
             Parent:1,
             Child:0,
             Total:0,
-            Goal:0
+            Goal:0,
+            HasEdit:false,
+            HasGoal:false
         };
     }
     return table;

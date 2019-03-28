@@ -95,12 +95,13 @@
                     Closed:[]
                 },
                 Edit:{
-                    Value:0,
+                    Value:false,
                     Table:false,
-                    Index:false
+                    Sum:false
                 },
                 Goal:{
-                    Value:0,
+                    Value:false,
+                    Table:false,
                     Sum:false
                 }
             },
@@ -162,19 +163,59 @@
                 App.Methods.PivotCreate(App.Model.Form.Pivot.Closed);
                 App.Methods.FormPivotReset();
             },
-            FormEditUpdate: (inTable, inIndex)=>
+            
+            FormEditUpdate: (inTable, inSum)=>
             {
                 var edit = App.Model.Form.Edit;
                 edit.Table = inTable;
-                edit.Index = inIndex;
-                edit.Value = inTable.Sums[inIndex].Local;
+                edit.Sum = inSum;
+                edit.Value = inSum.Local;
                 console.log("value should be", edit.Value);
             },
-            FormEditSubmit: ()=>
+            FormEditReset:()=>
+            {
+                App.Model.Form.Edit.Value = false;
+            },
+            FormEditSubmit: (inDelete)=>
             {
                 var edit = App.Model.Form.Edit;
-                App.Methods.EditCreate(edit.Table, edit.Index, edit.Value);
+                if(inDelete)
+                {
+                    App.Methods.EditDelete(edit.Table, edit.Sum.IndexSum);
+                }
+                else
+                {
+                    App.Methods.EditCreate(edit.Table, edit.Sum.IndexSum, edit.Value);
+                }
+                edit.Value = false;
             },
+            
+            FormGoalUpdate: (inTable, inSum)=>
+            {
+                var goal = App.Model.Form.Goal;
+                goal.Table = inTable;
+                goal.Sum = inSum;
+                goal.Value = inSum.Local;
+                console.log("value should be", goal.Value);
+            },
+            FormGoalReset:()=>
+            {
+                App.Model.Form.Goal.Value = false;
+            },
+            FormGoalSubmit: (inDelete)=>
+            {
+                var goal = App.Model.Form.Goal;
+                if(inDelete)
+                {
+                    App.Methods.GoalDelete(goal.Table, goal.Sum.IndexSum);
+                }
+                else
+                {
+                    App.Methods.GoalCreate(goal.Table, goal.Sum.IndexSum, goal.Value);
+                }
+                goal.Value = false;
+            },
+            
             InferTable: (inTree, inArray) =>
             {
                 return PathDown(inTree.Root, inArray, 0);
@@ -250,7 +291,7 @@
             },
             EditDelete: (inTable, inIndex)=>
             {
-                EditCreate(inTable, inIndex, 0);
+                App.Methods.EditCreate(inTable, inIndex, 1);
                 inTable.Sums[inIndex].HasEdit = false;
             },
             GoalCreate: (inTable, inIndex, inAmount) =>
@@ -428,16 +469,12 @@
                 <div class="Section">
                     <h3>Pivots</h3>
                     ${App.Render.Pivots(inModel, inMethods)}
-                    ${App.Render.PivotForm(inModel, inMethods)}
+                    ${App.Render.FormPivot(inModel, inMethods)}
                 </div>
                 <div class="Section">
                     <h3>Edit</h3>
-                    <form @submit=${(inEvent)=>{inEvent.preventDefault(); inMethods.FormEditSubmit();App.Render.Update();}}>
-                        <h4>Local</h4>
-                        <input type="number" value=${inModel.Form.Edit.Value} @input=${ (inEvent)=>{inModel.Form.Edit.Value = parseFloat(inEvent.target.value);} }/>
-                        <button @click=${ ()=>{} }>remove</button>
-                    </form>
-    
+                    ${App.Render.FormEdit(inModel.Form.Edit, inMethods)}
+                    ${App.Render.FormGoal(inModel.Form.Goal, inMethods)}
                 </div>
                 <div class="Section">
                     <h3>View</h3>
@@ -445,7 +482,101 @@
                 </div>
                 `;
             },
-            PivotForm: (inModel, inMethods) =>
+            FormEdit:(inModel, inMethods)=>
+            {
+                var handlerSubmit = (inEvent)=>
+                {
+                    inEvent.preventDefault();
+                    inMethods.FormEditSubmit();App.Render.Update();
+                };
+                var handlerDelete = (inEvent)=>
+                {
+                    inEvent.preventDefault();
+                    inMethods.FormEditSubmit(true);App.Render.Update();
+                };
+                var handlerReset = ()=>
+                {
+                    inMethods.FormEditReset();App.Render.Update();
+                };
+
+                var markupButtons;
+                if(!inModel.Sum.HasEdit)
+                {
+                    markupButtons = html`
+                    <button @click=${ handlerSubmit }>create</button>
+                    <button @click=${ handlerReset }>cancel</button>
+                    `;
+                }
+                else
+                {
+                    markupButtons = html`
+                    <button @click=${ handlerSubmit }>update</button>
+                    <button @click=${ handlerReset }>cancel</button>
+                    <button @click=${ handlerDelete }>remove edit</button>
+                    `;
+                }
+
+
+                if(inModel.Value !== false)
+                {
+                    return html`
+                    <form action="/" @submit=${handlerSubmit}>
+                        <h4>Local Edit</h4>
+                        <input type="text" value=${inModel.Value} @input=${ (inEvent)=>{
+                            inModel.Value = parseFloat(inEvent.target.value);
+                        } }/>
+                        ${markupButtons}
+                    </form>`;
+                }
+            },
+            FormGoal:(inModel, inMethods)=>
+            {
+                var handlerSubmit = (inEvent)=>
+                {
+                    inEvent.preventDefault();
+                    inMethods.FormGoalSubmit();App.Render.Update();
+                };
+                var handlerDelete = (inEvent)=>
+                {
+                    inEvent.preventDefault();
+                    inMethods.FormGoalSubmit(true);App.Render.Update();
+                };
+                var handlerReset = ()=>
+                {
+                    inMethods.FormGoalReset();App.Render.Update();
+                };
+
+                var markupButtons;
+                if(!inModel.Sum.HasGoal)
+                {
+                    markupButtons = html`
+                    <button @click=${ handlerSubmit }>create</button>
+                    <button @click=${ handlerReset }>cancel</button>
+                    `;
+                }
+                else
+                {
+                    markupButtons = html`
+                    <button @click=${ handlerSubmit }>update</button>
+                    <button @click=${ handlerReset }>cancel</button>
+                    <button @click=${ handlerDelete }>remove goal</button>
+                    `;
+                }
+
+
+                if(inModel.Value !== false)
+                {
+                    return html`
+                    <form action="/" @submit=${handlerSubmit}>
+                        <h4>Goal</h4>
+                        <input type="text" value=${inModel.Value} @input=${ (inEvent)=>{
+                            inModel.Value = parseFloat(inEvent.target.value);
+                        } }/>
+                        ${markupButtons}
+                    </form>`;
+                }
+            },
+            FormPivot: (inModel, inMethods) =>
             {
                 return html`
                 <div class="Pivot">
@@ -534,8 +665,8 @@
                         ${inModel.Sums.map( (inItem)=>
                         {
                             return html`
-                            <th class="Value">(${inItem}</th>
-                            <th class="Outside">+O)</th>
+                            <th class="Value">${inItem}</th>
+                            <th class="Outside">(+O)</th>
                             <th class="Local">xL</th>
                             <th class="Parent">xP</th>
                             <th class="Child">+C</th>
@@ -584,12 +715,14 @@
                         <td class="Value">${inItem.Value.toFixed(2)}</td>
                         <td class="Outside">${inItem.Outside}</td>
                         <td class="Local">
-                            <button @click=${()=>{inMethods.FormEditUpdate(inModel, inIndex);App.Render.Update();}}>${markupEdit}</button>
+                            <button @click=${()=>{inMethods.FormEditUpdate(inModel, inItem);App.Render.Update();}}>${markupEdit}</button>
                         </td>
                         <td class="Parent">${inItem.Parent}</td>
                         <td class="Child">${inItem.Child}</td>
                         <td class="Total">${total.toFixed(2)}</td>
-                        <td class="Goal">${markupGoal}</td>
+                        <td class="Goal">
+                            <button @click=${()=>{inMethods.FormGoalUpdate(inModel, inItem);App.Render.Update();}}>${markupGoal}</button>
+                        </td>
                         `;
                     } )}
                 </tr>
