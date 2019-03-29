@@ -606,13 +606,21 @@
             {
                 return inModel.Trees.map( (inItem)=>
                 {
+                    var output;
+                    output = [];
+                    if(inModel.Active != inItem)
+                    {
+                        output.push(html`<button @click=${()=>{inMethods.PivotSelect(inItem);App.Render.Update();}}>Select</button>`);
+                    }
                     return html`
                     <div class="Pivot">
+                        ${output}
                         <ul @click=${ ()=>{inMethods.PivotSelect(inItem);App.Render.Update();} }>
                         ${inItem.Pivot.map( (inItem)=>{
                             return html`<li>${inModel.Display[inItem]}</li>`;
                         } )}
                         </ul>
+                        <button @click=${()=>{inMethods.PivotDelete(inItem);App.Render.Update();}}>Delete</button>
                         ${App.Render.BranchCondensed(inItem.Root, inMethods)}
                     </div>`;
                 });
