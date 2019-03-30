@@ -163,7 +163,7 @@ export const Tweak = (inTable, inColumnIndex, inAmount) =>
     }
     
     column.Local = inAmount;
-    adjust = (column.Value*column.Local) - (column.Value);
+    adjust = (column.Value*change);
     TweakUp(inTable, inColumnIndex, adjust, TweakUpChild);
     TweakDown(inTable, inColumnIndex);
 };

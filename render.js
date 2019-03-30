@@ -242,10 +242,10 @@ export var Render = {
                 ${inModel.Sums.map( (inItem)=>
                 {
                     return html`
-                    <th class="Value">${inItem}</th>
-                    <th class="Outside">(+O)</th>
-                    <th class="Local">xL</th>
-                    <th class="Parent">xP</th>
+                    <th class="Value">(${inItem}</th>
+                    <th class="Outside">+O)</th>
+                    <th class="Local">*L</th>
+                    <th class="Parent">*P</th>
                     <th class="Child">+C</th>
                     <th class="Total">=T</th>
                     <th class="Goal">-G)</th>`;
@@ -276,28 +276,20 @@ export var Render = {
                 }
                 else
                 {
-                    markupGoal = "+";
-                }
-                if(inItem.HasEdit)
-                {
-                    markupEdit = inItem.Local;
-                }
-                else
-                {
-                    markupEdit = "+";
+                    markupGoal = inItem.Goal;
                 }
 
 
                 return html`
-                <td class="Value">${inItem.Value.toFixed(2)}</td>
-                <td class="Outside">${inItem.Outside}</td>
-                <td class="Local">
-                    <button @click=${()=>{inMethods.FormEditUpdate(inModel, inItem);Render.Update();}}>${markupEdit}</button>
+                <td class="Value">(${inItem.Value.toFixed(2)}</td>
+                <td class="Outside">+${inItem.Outside - inItem.Value})</td>
+                <td class="Local">*
+                    <button @click=${()=>{inMethods.FormEditUpdate(inModel, inItem);Render.Update();}}>${inItem.Local}</button>
                 </td>
-                <td class="Parent">${inItem.Parent}</td>
-                <td class="Child">${inItem.Child}</td>
-                <td class="Total">${total.toFixed(2)}</td>
-                <td class="Goal">
+                <td class="Parent">*${inItem.Parent}</td>
+                <td class="Child">+${inItem.Child}</td>
+                <td class="Total">=${total.toFixed(2)}</td>
+                <td class="Goal">-
                     <button @click=${()=>{inMethods.FormGoalUpdate(inModel, inItem);Render.Update();}}>${markupGoal}</button>
                 </td>
                 `;
