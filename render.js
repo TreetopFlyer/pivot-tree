@@ -263,7 +263,6 @@ export var Render = {
             </td>
             ${inModel.Sums.map( (inItem, inIndex)=>{
 
-                var total;
                 var markupGoal;
                 if(inItem.HasGoal)
                 {
@@ -273,17 +272,15 @@ export var Render = {
                 {
                     markupGoal = inItem.Goal;
                 }
-
-
                 return html`
-                <td class="Value">(${inItem.Value.toFixed(2)}</td>
-                <td class="Outside">+${inItem.Outside - inItem.Value})</td>
+                <td class="Value">(${inItem.Value}</td>
+                <td class="Outside">+${inItem.Outside})</td>
                 <td class="Local">*
                     <button @click=${()=>{inMethods.FormEditUpdate(inModel, inItem);Render.Update();}}>${inItem.Local}</button>
                 </td>
                 <td class="Parent">*${inItem.Parent}</td>
                 <td class="Child">+${inItem.Child}</td>
-                <td class="Total">=${inItem.Total.toFixed(2)}</td>
+                <td class="Total">=${inItem.Total}</td>
                 <td class="Goal">-
                     <button @click=${()=>{inMethods.FormGoalUpdate(inModel, inItem);Render.Update();}}>${markupGoal}</button>
                 </td>

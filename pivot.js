@@ -129,6 +129,7 @@ const SumValue = (inTable, inSum, inSumIndex) =>
     if(change != 0)
     {
         inSum.Value = newTotal;
+        SumRecompute(inSum);
         TweakUp(inTable, inSumIndex, change, TweakUpValue);
     }
 };
@@ -149,12 +150,13 @@ const SumOutside = (inTable, inSum, inSumIndex) =>
     if(change != 0)
     {
         inSum.Outside = newTotal;
+        SumRecompute(inSum);
         TweakUp(inTable, inSumIndex, change, TweakUpOutside);
     }
 };
 const SumRecompute = (inSum) =>
 {
-    inSum.Total = inSum.Outside*inSum.Local*inSum.Parent + inSum.Child;
+    inSum.Total = (inSum.Outside)*inSum.Local*inSum.Parent + inSum.Child;
     inSum.Error = inSum.Goal - inSum.Total;
     inSum.HasEdit = (inSum.Local !== 1);
     inSum.HasGoal = (inSum.Goal !== 0);

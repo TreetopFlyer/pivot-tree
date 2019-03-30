@@ -114,7 +114,11 @@ export const Methods = {
         }
         goal.Value = false;
     },
-    
+    FormGoalEnforce: ()=>
+    {
+
+    },
+
     InferTable: (inTree, inArray) =>
     {
         return PathDown(inTree.Root, inArray, 0);
@@ -180,11 +184,10 @@ export const Methods = {
         Tweak(inTable, inIndex, inAmount);
         for(i=0; i<Model.Trees.length; i++)
         {
-            if(Model.Trees[i] == Model.Active)
+            if(Model.Trees[i] != Model.Active)
             {
-                continue;
+                TweakCheck(Model.Trees[i].Root);
             }
-            TweakCheck(Model.Trees[i].Root);
         }
         inTable.Sums[inIndex].HasEdit = true;
     },
@@ -229,13 +232,21 @@ export const Methods = {
         var i;
         for(i=0; i<Model.Trees.length; i++)
         {
+            console.log("delete check at", i, "of", Model.Trees.length);
             if(Model.Trees[i] == inPivot)
             {
+                console.log("removing", i);
                 if(Model.Active == inPivot)
                 {
                     Model.Active = false;
                 }
                 Model.Trees.splice(i, 1);
+                i--;
+            }
+            else
+            {
+                console.log("checking", i, Model.Trees[i]);
+                TweakCheck(Model.Trees[i].Root);
             }
         }
         
