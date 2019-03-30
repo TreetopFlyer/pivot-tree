@@ -1,0 +1,2 @@
+ProcessLeaves loops over all sums. That should be changed so its only on a specified array of sums.
+
