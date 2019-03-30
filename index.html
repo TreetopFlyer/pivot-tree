@@ -67,7 +67,7 @@
 <script type="module">
 import { Methods } from './methods.js';
 import { Render } from './render.js';
-
+import './elements.js';
 
 var Model = {
     Display:[ "Thing", "Type", "Cost", "Count"],
@@ -115,12 +115,13 @@ Papa.parse("sample.csv",
     complete: function(results, file)
     {
         console.log("Parsing complete:", results, file);
+        /*
         Model.Keys = results.data.shift();
         Model.Display = Model.Keys.slice();
         Model.Sums = ["value_loc","value_usd","cost_loc","cost_usd","units"];
         Model.Pivots = ["bill_cust_descr", "billto_group", "ship_cust_descr", "shipto_group", "quota_rep_descr", "director_descr", "segm", "mod_chan", "mod_chansub", "majg_descr", "ming_descr"];
         Model.Rows = results.data;
-
+        */
         Methods.Init(Model);
         Render.Init(document.querySelector("#App"), Model, Methods);
         console.log(Model);

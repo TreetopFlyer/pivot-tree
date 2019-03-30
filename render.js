@@ -20,6 +20,7 @@ export var Render = {
     Layout: (inModel, inMethods) =>
     {
         return html`
+        <pivot-overview></pivot-overview>
         <div class="Section">
             <h3>State</h3>
             <button @click=${ ()=>{inMethods.StateSave();Render.Update();} }>Save</button>
@@ -195,15 +196,11 @@ export var Render = {
 
         inModel.Sums.map( (inItem)=>
         {
-            var total;
-            var markupGoal;
-            var markupEdit;
-            total = (inItem.Outside) * inItem.Local * inItem.Parent + inItem.Child;
             if(inItem.HasGoal)
             {
                 goals.push(html`
                     <button @click=${()=>{inMethods.FormGoalUpdate(inModel, inItem);Render.Update();}}>
-                        Goal: ${inItem.Goal}:<strong>${total - inItem.Goal}</strong>
+                        Goal: ${inItem.Goal}:<strong>${inItem.Total - inItem.Goal}</strong>
                     </button>`);
             }
 
@@ -268,11 +265,9 @@ export var Render = {
 
                 var total;
                 var markupGoal;
-                var markupEdit;
-                total = inItem.Outside * inItem.Local * inItem.Parent + inItem.Child;
                 if(inItem.HasGoal)
                 {
-                    markupGoal = html`${inItem.Goal}: <strong>${total - inItem.Goal}</strong>`;
+                    markupGoal = html`${inItem.Goal}: <strong>${inItem.Total - inItem.Goal}</strong>`;
                 }
                 else
                 {
@@ -288,7 +283,7 @@ export var Render = {
                 </td>
                 <td class="Parent">*${inItem.Parent}</td>
                 <td class="Child">+${inItem.Child}</td>
-                <td class="Total">=${total.toFixed(2)}</td>
+                <td class="Total">=${inItem.Total.toFixed(2)}</td>
                 <td class="Goal">-
                     <button @click=${()=>{inMethods.FormGoalUpdate(inModel, inItem);Render.Update();}}>${markupGoal}</button>
                 </td>

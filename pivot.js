@@ -82,8 +82,13 @@ const Table = (inName, inParent, inRows, inSums) =>
             Child:0,
             Total:0,
             Goal:0,
+            Error:0,
             HasEdit:false,
-            HasGoal:false
+            HasGoal:false,
+            HasOutside:false,
+            HasParent:false,
+            HasChild:false,
+            HasError:false
         };
     }
     return table;
@@ -147,6 +152,17 @@ const SumOutside = (inTable, inSum, inSumIndex) =>
         TweakUp(inTable, inSumIndex, change, TweakUpOutside);
     }
 };
+const SumRecompute = (inSum) =>
+{
+    inSum.Total = inSum.Outside*inSum.Local*inSum.Parent + inSum.Child;
+    inSum.Error = inSum.Goal - inSum.Total;
+    inSum.HasEdit = (inSum.Local !== 1);
+    inSum.HasGoal = (inSum.Goal !== 0);
+    inSum.HasOutside = false;
+    inSum.HasParent = (inSum.Parent !== 1);
+    inSum.HasChild = (inSum.Child !== 0);
+    inSum.HasError = (inSum.Error !== 0);
+};
 
 export const Tweak = (inTable, inColumnIndex, inAmount) =>
 {
@@ -173,6 +189,7 @@ export const Tweak = (inTable, inColumnIndex, inAmount) =>
     
     column.Local = inAmount;
     adjust = (column.Value*change);
+    SumRecompute(column);
     TweakUp(inTable, inColumnIndex, adjust, TweakUpChild);
     TweakDown(inTable, inColumnIndex);
 };
@@ -185,19 +202,27 @@ const TweakDown = (inTable, inColumn) =>
     var i;
     var parentColumn;
     var parentScalar;
+    var sum;
     parentColumn = inTable.Sums[inColumn];
     parentScalar = parentColumn.Local * parentColumn.Parent;
     for(i=0; i<inTable.Children.length; i++)
     {
-        inTable.Children[i].Sums[inColumn].Parent = parentScalar;
+        sum = inTable.Children[i].Sums[inColumn];
+        sum.Parent = parentScalar;
+        SumRecompute(sum);
         TweakDown(inTable.Children[i], inColumn, parentScalar);
     }
 };
+
+
 const TweakUp = (inTable, inColumn, inAmount, inProcessor) =>
 {
+    var sum;
     if(inTable.Parent)
     {
-        inProcessor(inTable.Parent.Sums[inColumn], inAmount);
+        sum = inTable.Parent.Sums[inColumn];
+        inProcessor(sum, inAmount);
+        SumRecompute(sum);
         TweakUp(inTable.Parent, inColumn, inAmount, inProcessor);
     }
 };
