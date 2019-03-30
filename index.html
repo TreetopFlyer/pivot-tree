@@ -61,56 +61,71 @@
     {
         padding-right:20px;
     }
-    </style>
-    <div id="App"></div>
-    <script type="module">
+</style>
+<script src="papaparse.min.js"></script>
+<div id="App"></div>
+<script type="module">
+import { Methods } from './methods.js';
+import { Render } from './render.js';
 
-    import { Methods } from './methods.js';
-    import { Render } from './render.js';
-    
 
-    var Model = {
-        Display:[ "Thing", "Type", "Cost", "Count"],
-        Keys:   [ "thing", "type", "cost", "count"],
-        Sums:   [                  "cost", "count"],
-        Pivots: [ "thing", "type"                 ],
-        Rows:   [
-                ["thing1",    "a",      1,       1],
-                ["thing1",    "b",      2,       1],
-                ["thing1",    "a",      3,       2],
-                ["thing1",    "b",      4,       2],
-                ["thing2",    "a",      1,       2],
-                ["thing2",    "b",      2,       2],
-                ["thing2",    "a",      3,       2],
-                ["thing2",    "b",      4,       2],
-                ["thing2",    "a",      5,       1],
-                ["thing2",    "b",      6,       1],
-                ["thing2",    "a",      7,       1]
-                ],
-        Trees:  [],
-        Active:false,
-        Form:{
-            Pivot:{
-                Open:[],
-                Closed:[]
-            },
-            Edit:{
-                Value:false,
-                Table:false,
-                Sum:false
-            },
-            Goal:{
-                Value:false,
-                Table:false,
-                Sum:false
-            }
+var Model = {
+    Display:[ "Thing", "Type", "Cost", "Count"],
+    Keys:   [ "thing", "type", "cost", "count"],
+    Sums:   [                  "cost", "count"],
+    Pivots: [ "thing", "type"                 ],
+    Rows:   [
+            ["thing1",    "a",      1,       1],
+            ["thing1",    "b",      2,       1],
+            ["thing1",    "a",      3,       2],
+            ["thing1",    "b",      4,       2],
+            ["thing2",    "a",      1,       2],
+            ["thing2",    "b",      2,       2],
+            ["thing2",    "a",      3,       2],
+            ["thing2",    "b",      4,       2],
+            ["thing2",    "a",      5,       1],
+            ["thing2",    "b",      6,       1],
+            ["thing2",    "a",      7,       1]
+            ],
+    Trees:  [],
+    Active:false,
+    Form:{
+        Pivot:{
+            Open:[],
+            Closed:[]
         },
-        History:[],
-        Epoch:0
-    };
+        Edit:{
+            Value:false,
+            Table:false,
+            Sum:false
+        },
+        Goal:{
+            Value:false,
+            Table:false,
+            Sum:false
+        }
+    },
+    History:[],
+    Epoch:0
+};
 
-    
-    Methods.Init(Model);
-    Render.Init(document.querySelector("#App"), Model, Methods);
-    console.log(Model);
-    </script>
+Papa.parse("sample.csv",
+{
+    download:true,
+    complete: function(results, file)
+    {
+        console.log("Parsing complete:", results, file);
+        Model.Keys = results.data.shift();
+        Model.Display = Model.Keys.slice();
+        Model.Sums = ["value_loc","value_usd","cost_loc","cost_usd","units"];
+        Model.Pivots = ["bill_cust_descr", "billto_group", "ship_cust_descr", "shipto_group", "quota_rep_descr", "director_descr", "segm", "mod_chan", "mod_chansub", "majg_descr", "ming_descr"];
+        Model.Rows = results.data;
+
+        Methods.Init(Model);
+        Render.Init(document.querySelector("#App"), Model, Methods);
+        console.log(Model);
+    }
+});
+
+
+</script>

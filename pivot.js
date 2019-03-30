@@ -35,7 +35,16 @@ const PivotTable = (inTable, inColumnIndex, inSums) =>
     rows: for(i=0; i<inTable.Rows.length; i++)
     {
         row = inTable.Rows[i];
-        cell = row[inColumnIndex].toString().toLowerCase();
+        console.log(row);
+        cell = row[inColumnIndex];
+        if(cell)
+        {
+            cell = cell.toString().toLowerCase();
+        }
+        else
+        {
+            cell = ":(";
+        }
         uniques: for(j=0; j<output.length; j++)
         {
             if(cell == output[j].Name)

@@ -15,7 +15,11 @@ export const Methods = {
             for(j=0; j<Model.Rows.length; j++)
             {
                 row = Model.Rows[j];
-                cell = row[index];
+                cell = parseFloat(row[index]);
+                if(cell){}
+                else{
+                    cell = 0;
+                }
                 row[index] = {Original:cell, Modified:cell, Epoch:0}
             }
         }
