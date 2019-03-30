@@ -274,7 +274,7 @@ export var Render = {
                 }
                 return html`
                 <td class="Value">(${inItem.Value}</td>
-                <td class="Outside">+${inItem.Outside})</td>
+                <td class="Outside">+${inItem.Outside - inItem.Value})</td>
                 <td class="Local">*
                     <button @click=${()=>{inMethods.FormEditUpdate(inModel, inItem);Render.Update();}}>${inItem.Local}</button>
                 </td>
