@@ -182,7 +182,9 @@ export var Render = {
                 } )}
                 </ul>
                 <button @click=${()=>{inMethods.PivotDelete(inItem);Render.Update();}}>Delete</button>
-                ${Render.BranchCondensed(inItem.Root, inMethods)}
+                <p>
+                    ${Render.BranchCondensed(inItem.Root, inMethods)}
+                </p>
             </div>`;
         });
     },
@@ -197,14 +199,20 @@ export var Render = {
             var markupGoal;
             var markupEdit;
             total = (inItem.Outside) * inItem.Local * inItem.Parent + inItem.Child;
-            if(inItem.Goal != 0)
+            if(inItem.HasGoal)
             {
-                goals.push( html`Goal: ${inItem.Goal}` );
+                goals.push(html`
+                    <button @click=${()=>{inMethods.FormGoalUpdate(inModel, inItem);Render.Update();}}>
+                        Goal: ${inItem.Goal}:<strong>${total - inItem.Goal}</strong>
+                    </button>`);
             }
 
-            if(inItem.Local != 1)
+            if(inItem.HasEdit)
             {
-                edits.push( html`Edit: ${inItem.Local}` );
+                edits.push( html`
+                    <button @click=${()=>{inMethods.FormEditUpdate(inModel, inItem);Render.Update();}}>
+                    Edit: ${inItem.Local}
+                    </button>` );
             }
         }
         );
@@ -264,7 +272,7 @@ export var Render = {
                 total = inItem.Outside * inItem.Local * inItem.Parent + inItem.Child;
                 if(inItem.HasGoal)
                 {
-                    markupGoal = inItem.Goal;
+                    markupGoal = html`${inItem.Goal}: <strong>${total - inItem.Goal}</strong>`;
                 }
                 else
                 {
