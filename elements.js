@@ -1,5 +1,5 @@
 import {LitElement, html, css} from 'https://unpkg.com/lit-element/lit-element.js?module';
-    
+
 class Sum extends LitElement
 {
     constructor()
@@ -49,6 +49,7 @@ class PivotOverview extends LitElement
 
     render()
     {
+        
         var buttonText;
         if(this.Active)
         {
@@ -58,7 +59,6 @@ class PivotOverview extends LitElement
         {
             buttonText = "Show";
         }
-
         return html`
         <div class="PivotOverview">
             <button @click="${this.HandlerDisplay}">${buttonText}</button>

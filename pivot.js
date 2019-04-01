@@ -35,7 +35,6 @@ const PivotTable = (inTable, inColumnIndex, inSums) =>
     rows: for(i=0; i<inTable.Rows.length; i++)
     {
         row = inTable.Rows[i];
-        console.log(row);
         cell = row[inColumnIndex];
         if(cell)
         {

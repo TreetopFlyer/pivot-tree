@@ -20,7 +20,6 @@ export var Render = {
     Layout: (inModel, inMethods) =>
     {
         return html`
-        <pivot-overview></pivot-overview>
         <div class="Section">
             <h3>State</h3>
             <button @click=${ ()=>{inMethods.StateSave();Render.Update();} }>Save</button>
@@ -131,7 +130,7 @@ export var Render = {
             return html`
             <form action="/" @submit=${handlerSubmit}>
                 <h4>Goal</h4>
-                <input type="text" value=${inModel.Value} @input=${ (inEvent)=>{
+                <input type="text" .value=${inModel.Value} @input=${ (inEvent)=>{
                     inModel.Value = parseFloat(inEvent.target.value);
                 } }/>
                 ${markupButtons}
@@ -176,6 +175,7 @@ export var Render = {
             }
             return html`
             <div class="Pivot">
+                <pivot-overview ?Active=${inModel.Active == inItem} .Path="${inItem.Pivot}"></pivot-overview>
                 ${output}
                 <ul @click=${ ()=>{inMethods.PivotSelect(inItem);Render.Update();} }>
                 ${inItem.Pivot.map( (inItem)=>{

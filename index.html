@@ -1,132 +1,141 @@
-<style>
-    .Row
-    {
-        padding-left:20px;
-        overflow:hidden;
-        clear:both;
-    }
-    .Row > .Name
-    {
-        float:left;
-    }
-    .Row > .Columns
-    {
-        float:right;
-        overflow:hidden;
-    }
-    .Columns > .Cell
-    {
-        width:120px;
-        float:left;
-        border:1px solid #333;
-        padding:5px;
-    
-        text-align:right;
-    }
-    .Section
-    {
-        clear:both;
-    }
-    .Pivot
-    {
-        float:left;
-        border:1px solid #000;
-        margin:5px;
-    }
-    .Pivot span
-    {
-        display:inline-block;
-        padding:10px;
-        margin:3px;
-        background:#FC0;
-    }
-    th
-    {
-        border-bottom:1px solid #333;
-        text-align:center;
-    }
-    td
-    {
-        text-align:right;
-        padding:3px 0px 20px 10px;
-    }
-    td.Value
-    {
-        padding-left:40px;
-        background:#ddd;
-        font-weight:bold;
-        text-align:right;
-    }
-    td.Goal
-    {
-        padding-right:20px;
-    }
-</style>
-<script src="papaparse.min.js"></script>
-<div id="App"></div>
-<script type="module">
-import { Methods } from './methods.js';
-import { Render } from './render.js';
-import './elements.js';
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="papaparse.min.js"></script>
+        <style>
+            .Row
+            {
+                padding-left:20px;
+                overflow:hidden;
+                clear:both;
+            }
+            .Row > .Name
+            {
+                float:left;
+            }
+            .Row > .Columns
+            {
+                float:right;
+                overflow:hidden;
+            }
+            .Columns > .Cell
+            {
+                width:120px;
+                float:left;
+                border:1px solid #333;
+                padding:5px;
+            
+                text-align:right;
+            }
+            .Section
+            {
+                clear:both;
+            }
+            .Pivot
+            {
+                float:left;
+                border:1px solid #000;
+                margin:5px;
+            }
+            .Pivot span
+            {
+                display:inline-block;
+                padding:10px;
+                margin:3px;
+                background:#FC0;
+            }
+            th
+            {
+                border-bottom:1px solid #333;
+                text-align:center;
+            }
+            td
+            {
+                text-align:right;
+                padding:3px 0px 20px 10px;
+            }
+            td.Value
+            {
+                padding-left:40px;
+                background:#ddd;
+                font-weight:bold;
+                text-align:right;
+            }
+            td.Goal
+            {
+                padding-right:20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="App"></div>
+        <script type="module">
+            import { Methods } from './methods.js';
+            import { Render } from './render.js';
+            import './elements.js';
+            
+            var Model = {
+                Display:[ "Thing", "Type", "Cost", "Count"],
+                Keys:   [ "thing", "type", "cost", "count"],
+                Sums:   [                  "cost", "count"],
+                Pivots: [ "thing", "type"                 ],
+                Rows:   [
+                        ["thing1",    "a",      1,       1],
+                        ["thing1",    "b",      2,       1],
+                        ["thing1",    "a",      3,       2],
+                        ["thing1",    "b",      4,       2],
+                        ["thing2",    "a",      1,       2],
+                        ["thing2",    "b",      2,       2],
+                        ["thing2",    "a",      3,       2],
+                        ["thing2",    "b",      4,       2],
+                        ["thing2",    "a",      5,       1],
+                        ["thing2",    "b",      6,       1],
+                        ["thing2",    "a",      7,       1]
+                        ],
+                Trees:  [],
+                Active:false,
+                Form:{
+                    Pivot:{
+                        Open:[],
+                        Closed:[]
+                    },
+                    Edit:{
+                        Value:false,
+                        Table:false,
+                        Sum:false
+                    },
+                    Goal:{
+                        Value:false,
+                        Table:false,
+                        Sum:false
+                    }
+                },
+                History:[],
+                Epoch:0
+            };
+            
+            Papa.parse("sample.csv",
+            {
+                download:true,
+                complete: function(results, file)
+                {
+                    console.log("Parsing complete:", results, file);
+                    /*
+                    Model.Keys = results.data.shift();
+                    Model.Display = Model.Keys.slice();
+                    Model.Sums = ["value_loc","value_usd","cost_loc","cost_usd","units"];
+                    Model.Pivots = ["bill_cust_descr", "billto_group", "ship_cust_descr", "shipto_group", "quota_rep_descr", "director_descr", "segm", "mod_chan", "mod_chansub", "majg_descr", "ming_descr"];
+                    Model.Rows = results.data;
+                    */
+                    Methods.Init(Model);
+                    Render.Init(document.querySelector("#App"), Model, Methods);
+                    console.log(Model);
+                }
+            });
+            
+            
+        </script>
+    </body>
+</html>
 
-var Model = {
-    Display:[ "Thing", "Type", "Cost", "Count"],
-    Keys:   [ "thing", "type", "cost", "count"],
-    Sums:   [                  "cost", "count"],
-    Pivots: [ "thing", "type"                 ],
-    Rows:   [
-            ["thing1",    "a",      1,       1],
-            ["thing1",    "b",      2,       1],
-            ["thing1",    "a",      3,       2],
-            ["thing1",    "b",      4,       2],
-            ["thing2",    "a",      1,       2],
-            ["thing2",    "b",      2,       2],
-            ["thing2",    "a",      3,       2],
-            ["thing2",    "b",      4,       2],
-            ["thing2",    "a",      5,       1],
-            ["thing2",    "b",      6,       1],
-            ["thing2",    "a",      7,       1]
-            ],
-    Trees:  [],
-    Active:false,
-    Form:{
-        Pivot:{
-            Open:[],
-            Closed:[]
-        },
-        Edit:{
-            Value:false,
-            Table:false,
-            Sum:false
-        },
-        Goal:{
-            Value:false,
-            Table:false,
-            Sum:false
-        }
-    },
-    History:[],
-    Epoch:0
-};
 
-Papa.parse("sample.csv",
-{
-    download:true,
-    complete: function(results, file)
-    {
-        console.log("Parsing complete:", results, file);
-        /*
-        Model.Keys = results.data.shift();
-        Model.Display = Model.Keys.slice();
-        Model.Sums = ["value_loc","value_usd","cost_loc","cost_usd","units"];
-        Model.Pivots = ["bill_cust_descr", "billto_group", "ship_cust_descr", "shipto_group", "quota_rep_descr", "director_descr", "segm", "mod_chan", "mod_chansub", "majg_descr", "ming_descr"];
-        Model.Rows = results.data;
-        */
-        Methods.Init(Model);
-        Render.Init(document.querySelector("#App"), Model, Methods);
-        console.log(Model);
-    }
-});
-
-
-</script>
